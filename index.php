@@ -11,7 +11,7 @@ if (isset($_POST['login_user'])) {
 
   if (mysqli_num_rows($results) == 1) {
     $_SESSION['uname'] = $username;
-    header("location:home.php");
+    header("Location: home/home.php");
     exit();
   } else {
     echo "<script>alert('Wrong username/password combination'); window.location.href='index.html';</script>";

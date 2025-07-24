@@ -1,5 +1,5 @@
 <?php
-require('db.php');
+require('../db.php');
 
 $err = "";
 $name = $_POST['name'] ?? "";

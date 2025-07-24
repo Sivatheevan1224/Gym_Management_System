@@ -1,6 +1,6 @@
 <?php
 
-require('db.php');
+require('../db.php');
 
 $errors = array(); 
 if (isset($_REQUEST['payment'])) {
@@ -45,7 +45,7 @@ if (isset($_REQUEST['payment'])) {
 <div class="container">
 	<form class="mt-3 form-group" method="post" action="">
 		<h3>ADD PAYMENT AREA</h3>
-		 <?php include('errors.php'); 
+		 <?php include('../errors.php'); 
     echo @$msg;
 
     ?>

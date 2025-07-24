@@ -14,7 +14,7 @@ body {
 	top: 0; left: 0;
 	width: 100vw;
 	height: 100vh;
-	background-image: url('image1.jpg');
+	background-image: url('/GYM-MANAGEMENT-SYSTEM/images/image1.jpg');
 	background-size: cover;
 	background-position: center;
 	filter: brightness(0.65);

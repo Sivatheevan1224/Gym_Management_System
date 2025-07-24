@@ -1,5 +1,5 @@
 <?php
-include("auth.php");
+include("../login/auth.php");
 
 $info = isset($_GET['info']) ? $_GET['info'] : "";
 ?>
@@ -27,7 +27,7 @@ $info = isset($_GET['info']) ? $_GET['info'] : "";
   <div class="container-fluid px-4">
     <a class="navbar-brand fs-4 fw-bold" href="home.php">GYM MANAGEMENT SYSTEM</a>
     <div class="d-flex align-items-center">
-      <a href="logout.html" class="logout-link nav-link px-3">Logout</a>
+      <a href="../logout/logout.html" class="logout-link nav-link px-3">Logout</a>
     </div>
   </div>
 </nav>
@@ -40,7 +40,7 @@ $info = isset($_GET['info']) ? $_GET['info'] : "";
         <a class="list-group-item list-group-item-action fw-bold text-uppercase" data-bs-toggle="collapse" href="#collapseGym" role="button" aria-expanded="false" aria-controls="collapseGym">
           <i class="fas fa-dumbbell me-2"></i> Gym
         </a>
-        <div class="collapse" id="collapseGym" data-bs-parent="#sidebar">
+        <div class="collapse" id="collapseGym">
           <a href="home.php?info=add_gym" class="list-group-item list-group-item-action <?php if($info=='add_gym') echo 'active'; ?>">Add Gym</a>
           <a href="home.php?info=manage_gym" class="list-group-item list-group-item-action <?php if($info=='manage_gym') echo 'active'; ?>">View Gyms</a>
         </div>
@@ -48,7 +48,7 @@ $info = isset($_GET['info']) ? $_GET['info'] : "";
         <a class="list-group-item list-group-item-action fw-bold text-uppercase mt-3" data-bs-toggle="collapse" href="#collapsePayment" role="button" aria-expanded="false" aria-controls="collapsePayment">
           <i class="fas fa-credit-card me-2"></i> Payment Department
         </a>
-        <div class="collapse" id="collapsePayment" data-bs-parent="#sidebar">
+        <div class="collapse" id="collapsePayment">
           <a href="home.php?info=add_payment" class="list-group-item list-group-item-action <?php if($info=='add_payment') echo 'active'; ?>">Add Payment Area</a>
           <a href="home.php?info=manage_payment" class="list-group-item list-group-item-action <?php if($info=='manage_payment') echo 'active'; ?>">View Payment Areas</a>
         </div>
@@ -56,7 +56,7 @@ $info = isset($_GET['info']) ? $_GET['info'] : "";
         <a class="list-group-item list-group-item-action fw-bold text-uppercase mt-3" data-bs-toggle="collapse" href="#collapseMembers" role="button" aria-expanded="false" aria-controls="collapseMembers">
           <i class="fas fa-users me-2"></i> Members
         </a>
-        <div class="collapse" id="collapseMembers" data-bs-parent="#sidebar">
+        <div class="collapse" id="collapseMembers">
           <a href="home.php?info=add_member" class="list-group-item list-group-item-action <?php if($info=='add_member') echo 'active'; ?>">Add Member</a>
           <a href="home.php?info=manage_member" class="list-group-item list-group-item-action <?php if($info=='manage_member') echo 'active'; ?>">View Members</a>
         </div>
@@ -64,7 +64,7 @@ $info = isset($_GET['info']) ? $_GET['info'] : "";
         <a class="list-group-item list-group-item-action fw-bold text-uppercase mt-3" data-bs-toggle="collapse" href="#collapseTrainers" role="button" aria-expanded="false" aria-controls="collapseTrainers">
           <i class="fas fa-user-tie me-2"></i> Trainers
         </a>
-        <div class="collapse" id="collapseTrainers" data-bs-parent="#sidebar">
+        <div class="collapse" id="collapseTrainers">
           <a href="home.php?info=add_trainer" class="list-group-item list-group-item-action <?php if($info=='add_trainer') echo 'active'; ?>">Add Trainer</a>
           <a href="home.php?info=manage_trainer" class="list-group-item list-group-item-action <?php if($info=='manage_trainer') echo 'active'; ?>">View Trainers</a>
         </div>
@@ -89,28 +89,28 @@ $info = isset($_GET['info']) ? $_GET['info'] : "";
             // Load the requested page inside card
             switch ($info) {
               case "add_gym":
-                include('add_gym.php');
+                include('../gym/add_gym.php');
                 break;
               case "add_payment":
-                include('add_payment.php');
+                include('../payment/add_payment.php');
                 break;
               case "manage_payment":
-                include('manage_payment.php');
+                include('../payment/manage_payment.php');
                 break;
               case "add_member":
-                include('add_member.php');
+                include('../member/add_member.php');
                 break;
               case "manage_member":
-                include('manage_member.php');
+                include('../member/manage_member.php');
                 break;
               case "add_trainer":
-                include('add_trainer.php');
+                include('../trainer/add_trainer.php');
                 break;
               case "manage_trainer":
-                include('manage_trainer.php');
+                include('../trainer/manage_trainer.php');
                 break;
               case "manage_gym":
-                include('manage_gym.php');
+                include('../gym/manage_gym.php');
                 break;
               default:
                 echo "<p>Invalid selection. Please choose from the menu.</p>";
@@ -124,6 +124,23 @@ $info = isset($_GET['info']) ? $_GET['info'] : "";
 
 <!-- Bootstrap 5 JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Auto-expand the current section based on URL
+  document.addEventListener('DOMContentLoaded', function() {
+    const info = '<?php echo $info; ?>';
+    
+    if (info.includes('gym')) {
+      document.getElementById('collapseGym').classList.add('show');
+    } else if (info.includes('payment')) {
+      document.getElementById('collapsePayment').classList.add('show');
+    } else if (info.includes('member')) {
+      document.getElementById('collapseMembers').classList.add('show');
+    } else if (info.includes('trainer')) {
+      document.getElementById('collapseTrainers').classList.add('show');
+    }
+  });
+</script>
 
 </body>
 </html>

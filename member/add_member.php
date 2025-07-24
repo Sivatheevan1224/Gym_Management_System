@@ -1,6 +1,6 @@
 <?php
 
-require('db.php');
+require('../db.php');
 
 $errors = array(); 
 if (isset($_REQUEST['member'])) {
@@ -49,10 +49,12 @@ if (isset($_REQUEST['member'])) {
 
 
 
+
+
 <div class="container">
 	<form class="form-group mt-3" method="post" action="">
 		<div><h3>ADD MEMBER</h3></div>
-		 <?php include('errors.php'); 
+		 <?php include('../errors.php'); 
     echo @$msg;
 
     ?>
