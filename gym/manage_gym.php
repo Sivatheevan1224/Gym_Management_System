@@ -1,4 +1,11 @@
 <?php
+ob_start();
+session_start();
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 //require_once('../auth.php');
 require_once('../db.php');
 
@@ -170,24 +177,237 @@ try {
     <title>Manage Gyms</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/GYM-MANAGEMENT-SYSTEM/home/home.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+        }
+        
+        /* Main Layout */
+        .app-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+        
+        /* Sidebar - keep your existing sidebar styles */
+        
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Form Section */
+        .form-section {
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            margin-left:300px;
+        }
+        
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-title {
+            font-size: 1.3rem;
+            color: white;
+        }
+        
+        .edit-mode .form-title {
+            color: #3498db;
+        }
+        
+        /* Table Section */
+        .table-section {
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex: 1;
+            margin-left:300px;
+        }
+        
+        /* Form Elements */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 0;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        /* Table Styles */
+        .search-box {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .search-box button {
+            padding: 8px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:hover {
+            
+        }
+        
+        .action-btn {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .edit-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
 </head>
 <body>
   <?php include('../navbar.php'); ?>
     
-    <div class="container-fluid">
-        <div class="row">
-            <?php include('../sidebar.php'); ?>
-            
-            <main class="col-md-10 ms-sm-auto px-md-4">
-                <div class="d-flex justify-content-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2"><?= empty($gym_data) ? 'Add New Gym' : 'Edit Gym' ?></h1>
+    <div class="app-container">
+        <?php include('../sidebar.php'); ?>
+        
+        <div class="main-content">
+            <!-- Form Section at the TOP -->
+            <div class="form-section <?= !empty($gym_data) ? 'edit-mode' : '' ?>">
+                <div class="form-header">
+                    <h2 class="form-title">
+                        <?= empty($gym_data) ? 'Add New Gym' : 'Edit Gym' ?>
+                    </h2>
+                    <?php if (!empty($gym_data)): ?>
+                        <a href="manage_gym.php" class="btn btn-success">+ Add New Gym</a>
+                    <?php endif; ?>
                 </div>
                 
                 <?php if (!empty($errors)): ?>
-                    <div class="alert alert-danger">
+                    <div style="color: #e74c3c; margin-bottom: 15px; padding: 10px;  border-radius: 4px;">
                         <?php foreach ($errors as $error): ?>
                             <p><?= htmlspecialchars($error) ?></p>
                         <?php endforeach; ?>
@@ -195,148 +415,138 @@ try {
                 <?php endif; ?>
                 
                 <?php if (isset($_GET['success'])): ?>
-                    <div class="alert alert-success">
+                    <div style="color: #155724; margin-bottom: 15px; padding: 10px; border-radius: 4px;">
                         <?= htmlspecialchars($_GET['success']) ?>
                     </div>
                 <?php endif; ?>
                 
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form method="post" action="manage_gym.php">
-                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                            <input type="hidden" name="action" value="<?= empty($gym_data) ? 'add' : 'edit' ?>">
-                            
-                            <?php if (!empty($gym_data)): ?>
-                                <input type="hidden" name="original_id" value="<?= htmlspecialchars($gym_data['gym_id']) ?>">
-                            <?php endif; ?>
-                            
-                            <div class="mb-3">
-                                <label for="gym_id" class="form-label">Gym ID</label>
-                                <input type="text" class="form-control" id="gym_id" name="gym_id" 
-                                       value="<?= htmlspecialchars($gym_data['gym_id'] ?? '') ?>" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Gym Name</label>
-                                <input type="text" class="form-control" id="name" name="name" 
-                                       value="<?= htmlspecialchars($gym_data['gym_name'] ?? '') ?>" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="address" class="form-label">Address</label>
-                                <input type="text" class="form-control" id="address" name="address" 
-                                       value="<?= htmlspecialchars($gym_data['address'] ?? '') ?>" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="type" class="form-label">Gym Type</label>
-                                <select class="form-select" id="type" name="type" required>
-                                    <option value="unisex" <?= (isset($gym_data['type']) && $gym_data['type'] === 'unisex') ? 'selected' : '' ?>>Unisex</option>
-                                    <option value="women" <?= (isset($gym_data['type']) && $gym_data['type'] === 'women') ? 'selected' : '' ?>>Women</option>
-                                    <option value="men" <?= (isset($gym_data['type']) && $gym_data['type'] === 'men') ? 'selected' : '' ?>>Men</option>
-                                </select>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">
-                                <?= empty($gym_data) ? 'Add Gym' : 'Update Gym' ?>
-                            </button>
-                            
-                            <?php if (!empty($gym_data)): ?>
-                                <a href="manage_gym.php" class="btn btn-secondary">Cancel</a>
-                            <?php endif; ?>
-                        </form>
+                <form method="post" action="manage_gym.php">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                    <input type="hidden" name="action" value="<?= empty($gym_data) ? 'add' : 'edit' ?>">
+                    
+                    <?php if (!empty($gym_data)): ?>
+                        <input type="hidden" name="original_id" value="<?= htmlspecialchars($gym_data['gym_id']) ?>">
+                    <?php endif; ?>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="gym_id">Gym ID</label>
+                            <input type="text" id="gym_id" name="gym_id" 
+                                   value="<?= htmlspecialchars($gym_data['gym_id'] ?? '') ?>" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="name">Gym Name</label>
+                            <input type="text" id="name" name="name" 
+                                   value="<?= htmlspecialchars($gym_data['gym_name'] ?? '') ?>" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <input type="text" id="address" name="address" 
+                                   value="<?= htmlspecialchars($gym_data['address'] ?? '') ?>" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="type">Gym Type</label>
+                            <select id="type" name="type" required>
+                                <option value="unisex" <?= (isset($gym_data['type']) && $gym_data['type'] === 'unisex') ? 'selected' : '' ?>>Unisex</option>
+                                <option value="women" <?= (isset($gym_data['type']) && $gym_data['type'] === 'women') ? 'selected' : '' ?>>Women</option>
+                                <option value="men" <?= (isset($gym_data['type']) && $gym_data['type'] === 'men') ? 'selected' : '' ?>>Men</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between mb-3">
-                            <h2>Gyms List</h2>
-                            <form method="get" class="d-flex">
-                                <input type="text" name="search" class="form-control me-2" placeholder="Enter gym name or gym id" 
-                                       value="<?= htmlspecialchars($search) ?>">
-                                <button type="submit" class="btn btn-outline-primary">Search</button>
-                            </form>
-                        </div>
-                        
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Gym ID</th>
-                                        <th>Name</th>
-                                        <th>Address</th>
-                                        <th>Type</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if ($gyms->num_rows > 0): ?>
-                                        <?php while ($gym = $gyms->fetch_assoc()): ?>
-                                            <tr>
-                                                <td><?= htmlspecialchars($gym['gym_id']) ?></td>
-                                                <td><?= htmlspecialchars($gym['gym_name']) ?></td>
-                                                <td><?= htmlspecialchars($gym['address']) ?></td>
-                                                <td><?= htmlspecialchars(ucfirst($gym['type'])) ?></td>
-                                                <td>
-                                                    <a href="manage_gym.php?action=edit&id=<?= urlencode($gym['gym_id']) ?>" 
-                                                       class="btn btn-sm btn-warning me-1">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </a>
-                                                    <a href="manage_gym.php?action=delete&id=<?= urlencode($gym['gym_id']) ?>" 
-                                                       class="btn btn-sm btn-danger text-dark" 
-                                                       onclick="return confirm('Are you sure you want to delete this gym?')">
-                                                        <i class="fas fa-trash-alt text-white"></i> Delete
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        <?php endwhile; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="5" class="text-center">No gyms found</td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <?php if ($total_pages > 1): ?>
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination justify-content-center">
-                                    <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                                        <a class="page-link" href="?page=1&search=<?= urlencode($search) ?>">First</a>
-                                    </li>
-                                    <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                                        <a class="page-link" href="?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>">Previous</a>
-                                    </li>
-                                    
-                                    <?php for ($i = max(1, $page - 2); $i <= min($page + 2, $total_pages); $i++): ?>
-                                        <li class="page-item <?= $i == $page ? 'active' : '' ?>">
-                                            <a class="page-link" href="?page=<?= $i ?>&search=<?= urlencode($search) ?>"><?= $i ?></a>
-                                        </li>
-                                    <?php endfor; ?>
-                                    
-                                    <li class="page-item <?= $page >= $total_pages ? 'disabled' : '' ?>">
-                                        <a class="page-link" href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>">Next</a>
-                                    </li>
-                                    <li class="page-item <?= $page >= $total_pages ? 'disabled' : '' ?>">
-                                        <a class="page-link" href="?page=<?= $total_pages ?>&search=<?= urlencode($search) ?>">Last</a>
-                                    </li>
-                                </ul>
-                            </nav>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn <?= empty($gym_data) ? 'btn-success' : 'btn-primary' ?>">
+                            <?= empty($gym_data) ? 'Add Gym' : 'Update Gym' ?>
+                        </button>
+                        <?php if (!empty($gym_data)): ?>
+                            <a href="manage_gym.php" class="btn btn-secondary">Cancel</a>
                         <?php endif; ?>
                     </div>
+                </form>
+            </div>
+            
+            <!-- Table Section Below the Form -->
+            <div class="table-section">
+                <div class="search-box">
+                    <form method="get" style="width: 100%;">
+                        <table>
+                        <tr>
+                        <td><input type="text" name="search" placeholder="Search gyms..." 
+                               value="<?= htmlspecialchars($search ?? '') ?>"></td>
+                        <td><button type="submit">Search</button></td>
+                        </tr>
+                        </table>
+                    </form>
                 </div>
-            </main>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($gyms->num_rows > 0): ?>
+                            <?php while ($gym = $gyms->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($gym['gym_id']) ?></td>
+                                    <td><?= htmlspecialchars($gym['gym_name']) ?></td>
+                                    <td><?= htmlspecialchars(ucfirst($gym['type'])) ?></td>
+                                    <td>
+                                        <button class="action-btn edit-btn" 
+                                                onclick="location.href='manage_gym.php?action=edit&id=<?= urlencode($gym['gym_id']) ?>'">
+                                            Edit
+                                        </button>
+                                        <button class="action-btn delete-btn" 
+                                                onclick="if(confirm('Are you sure you want to delete this gym?')) location.href='manage_gym.php?action=delete&id=<?= urlencode($gym['gym_id']) ?>'">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="4" style="text-align: center;">No gyms found</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+                
+                <?php if ($total_pages > 1): ?>
+                    <div style="margin-top: 20px; display: flex; justify-content: center; gap: 5px;">
+                        <?php if ($page > 1): ?>
+                            <a href="?page=1&search=<?= urlencode($search ?? '') ?>" class="btn btn-secondary">First</a>
+                            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($search ?? '') ?>" class="btn btn-secondary">Previous</a>
+                        <?php endif; ?>
+                        
+                        <?php for ($i = max(1, $page - 2); $i <= min($page + 2, $total_pages); $i++): ?>
+                            <a href="?page=<?= $i ?>&search=<?= urlencode($search ?? '') ?>" 
+                               class="btn <?= $i == $page ? 'btn-primary' : 'btn-secondary' ?>">
+                                <?= $i ?>
+                            </a>
+                        <?php endfor; ?>
+                        
+                        <?php if ($page < $total_pages): ?>
+                            <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($search ?? '') ?>" class="btn btn-secondary">Next</a>
+                            <a href="?page=<?= $total_pages ?>&search=<?= urlencode($search ?? '') ?>" class="btn btn-secondary">Last</a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Confirm before delete
         document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                if (!confirm('Are you sure you want to delete this item?')) {
+            btn.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to delete this gym?')) {
                     e.preventDefault();
                 }
             });
@@ -344,3 +554,4 @@ try {
     </script>
 </body>
 </html>
+<?php ob_end_flush(); ?>
