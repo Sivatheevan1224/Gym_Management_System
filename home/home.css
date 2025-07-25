@@ -111,9 +111,10 @@ nav.navbar:hover {
 
 /* Main content */
 #main-content {
-  margin-left: 20%; /* Updated to match new sidebar width */
-  padding-top: 1rem;
-  padding-bottom: 3rem;
+  margin-left: 20%; /* Matches the sidebar width */
+  padding-top: 2rem; /* Additional padding for better spacing */
+  padding-bottom: 2rem;
+  z-index: 1; /* Ensure it stays above the sidebar */
   color: #f0f0f0;
   background: transparent;
   overflow-x: hidden; /* Prevent horizontal scrolling */
@@ -153,6 +154,13 @@ nav.navbar:hover {
 #intro-section p {
   font-size: 1.2rem;
   line-height: 1.6;
+}
+
+/* Center align headings and text */
+#main-content h1, #main-content h2 {
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
 }
 
 /* Scrollbar Styling - Light theme for better visibility */
@@ -937,4 +945,18 @@ table tbody td,
 
 .table tbody tr {
   animation: tableRowFadeIn 0.3s ease-out;
+}
+
+/* Ensure main content is not hidden under the sidebar */
+#main-content {
+  margin-left: 20%; /* Matches the sidebar width */
+  padding-top: 2rem; /* Additional padding for better spacing */
+  padding-bottom: 2rem;
+  z-index: 1; /* Ensure it stays above the sidebar */
+}
+
+/* Adjust headings to ensure visibility */
+#main-content h1, #main-content h2 {
+  margin-top: 1rem;
+  padding-top: 1rem;
 }
