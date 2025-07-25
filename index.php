@@ -1,23 +1,28 @@
 <?php
 session_start();
-require('db.php');
+require('db.php'); // Make sure $conn is defined in db.php
 
-if (isset($_POST['login_user'])) {
-  $username = mysqli_real_escape_string($conn, $_POST['username']);
-  $pwd = mysqli_real_escape_string($conn, $_POST['pwd']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_user'])) {
+    $username = trim($_POST['username']);
+    $password = trim($_POST['pwd']);
 
-  $query = "SELECT * FROM login WHERE uname='$username' AND pwd='$pwd'";
-  $results = mysqli_query($conn, $query);
+    // Use prepared statement for security
+    $stmt = $conn->prepare("SELECT * FROM login WHERE uname = ? AND pwd = ?");
+    $stmt->bind_param("ss", $username, $password);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-  if (mysqli_num_rows($results) == 1) {
-    $_SESSION['uname'] = $username;
-    header("Location: home/home.php");
-    exit();
-  } else {
-    echo "<script>alert('Wrong username/password combination'); window.location.href='index.html';</script>";
-  }
+    if ($result->num_rows === 1) {
+        $_SESSION['uname'] = $username;
+        header("Location: home/home.php");
+        exit();
+    } else {
+        // Redirect back with error flag
+        header("Location: index.html?error=1");
+        exit();
+    }
 } else {
-  header("location:index.html");
-  exit();
+    header("Location: index.html");
+    exit();
 }
 ?>

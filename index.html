@@ -7,77 +7,502 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Additional custom styles */
+    body {
+      padding-top: 70px; /* Space for fixed navbar */
+      background: url('/GYM-MANAGEMENT-SYSTEM/images/image1.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #f8f9fa;
+      position: relative;
+    }
+    
+    /* Dark overlay for better readability */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%);
+      z-index: -1;
+    }
+    
+    /* Navbar styles */
+    .navbar {
+      box-shadow: 0 2px 15px rgba(0,0,0,0.4);
+      background-color: rgba(33, 37, 41, 0.98) !important;
+    }
+    
+    .nav-link {
+      transition: all 0.3s ease;
+      font-weight: 600 !important;
+      padding: 0.5rem 1rem !important;
+    }
+    
+    .nav-link:hover {
+      color: #6FB1FC !important;
+      transform: translateY(-2px);
+      text-decoration: none !important;
+    }
+    
+    /* Hero section */
+    .hero-section {
+      background: transparent;
+      min-height: 500px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      transition: all 0.5s ease;
+    }
+    
+    .hero-text {
+      transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    .hero-text.animated {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .hero-text-delay-1 {
+      transition-delay: 0.2s;
+    }
+    
+    .hero-text-delay-2 {
+      transition-delay: 0.4s;
+    }
+    
+    .hero-image {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      height: 100%;
+      opacity: 0.8;
+      transform: translateX(20%);
+      transition: all 1s ease;
+      z-index: 1;
+      filter: grayscale(30%) brightness(0.7);
+    }
+    
+    .hero-section:hover .hero-image {
+      transform: translateX(0);
+      opacity: 1;
+      filter: grayscale(20%) brightness(0.8);
+    }
+    
+    /* Feature cards */
+    .feature-card {
+      transition: all 0.4s ease;
+      transform-style: preserve-3d;
+      background-color: #2d2d2d !important;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.5) !important;
+      background-color: #343434 !important;
+    }
+    
+    .feature-icon {
+      transition: all 0.4s ease;
+    }
+    
+    .feature-card:hover .feature-icon {
+      transform: scale(1.2);
+      color: #6FB1FC !important;
+    }
+    
+    /* Footer styles */
+    footer {
+      background-color: #1a1a1a !important;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .footer-link {
+      transition: all 0.3s ease;
+      text-decoration: none !important;
+      font-weight: 600;
+      color: #adb5bd !important;
+    }
+    
+    .footer-link:hover {
+      color: #6FB1FC !important;
+      transform: translateY(-2px);
+    }
+    
+    .footer-text {
+      color: #adb5bd !important;
+    }
+    /* style.css - Enhanced Login Button Styles */
+
+/* Base Login Button Style */
+.btn-login {
+  background: linear-gradient(135deg, #4364F7, #3a56d4);
+  border: none;
+  color: white !important;
+  font-weight: 600;
+  padding: 0.6rem 1.8rem;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(67, 100, 247, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+}
+
+/* Login Button Hover Effects */
+.btn-login:hover {
+  background: linear-gradient(135deg, #3a56d4, #2d44b0);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(67, 100, 247, 0.5);
+  color: white !important;
+}
+
+/* Login Button Active State */
+.btn-login:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px rgba(67, 100, 247, 0.4);
+}
+
+/* Login Button Icon */
+.btn-login i {
+  margin-right: 8px;
+  transition: transform 0.3s ease;
+}
+
+/* Login Button Hover Icon Animation */
+.btn-login:hover i {
+  transform: translateX(3px);
+}
+
+/* Ripple Effect */
+.btn-login::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.btn-login:hover::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20);
+    opacity: 0;
+  }
+}
+
+/* Navbar Specific Adjustments */
+.navbar .btn-login {
+  margin-left: 1rem;
+  padding: 0.5rem 1.5rem;
+}
+
+/* Hero Section Button Specific Adjustments */
+.hero-section .btn-login {
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+}
+    /* Login Modal Enhancements */
+    .login-modal-card {
+      background-color: #2d2d2d;
+      color: #f8f9fa;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .login-modal-card .form-control {
+      background-color: #343434;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #f8f9fa;
+    }
+    
+    .login-modal-card .form-control::placeholder {
+      color: #adb5bd;
+      opacity: 0.7;
+    }
+    
+    .login-modal-card .input-group-text {
+      background-color: #3d3d3d;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #6FB1FC;
+    }
+    
+    .login-modal-card .btn-primary {
+      background-color: #4364F7;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    
+    .login-modal-card .btn-primary:hover {
+      background-color: #3a56d4;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 100, 247, 0.4);
+    }
+    
+    /* Error message styling */
+    .error-message {
+      background-color: #dc3545;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Button enhancements */
+    .btn-hover-shadow {
+      transition: all 0.3s ease;
+    }
+    
+    .btn-hover-shadow:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    /* Text colors */
+    h1, h2, h3, h4, h5, h6 {
+      color: #f8f9fa;
+      font-weight: 700;
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #6FB1FC;
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #2d2d2d;
+    }
+  </style>
 </head>
 <body class="text-light d-flex flex-column min-vh-100">
 
-<nav class="navbar navbar-expand-md navbar-dark bg-gradient-primary shadow-sm fixed-top">
+<!-- Navbar - Fixed at top -->
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
   <div class="container">
-    <a class="navbar-brand fs-3 fw-bold" href="index.html">GYM MANAGEMENT SYSTEM</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu" 
-            aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle navigation">
+    <a class="navbar-brand fs-3 fw-bold" href="index.html">
+      <i class="fas fa-dumbbell me-2"></i>GYM MANAGEMENT SYSTEM
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarMenu">
-      <ul class="navbar-nav ms-auto mb-2 mb-md-0">
-        <li class="nav-item">
-          <a class="nav-link active" href="index.html">Home</a>
+      <ul class="navbar-nav ms-auto mb-2 mb-md-0 align-items-center">
+        <li class="nav-item mx-2">
+          <a class="nav-link active" href="index.html">HOME</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#contactModal">Contact</a>
+        <li class="nav-item mx-2">
+          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#contactModal">CONTACT</a>
+        </li>
+        <li class="nav-item mx-2">
+          <button class="btn btn-login" data-bs-toggle="modal" data-bs-target="#loginModal">
+            <i class="fas fa-sign-in-alt me-1"></i> ADMIN LOGIN
+          </button>
         </li>
       </ul>
     </div>
   </div>
 </nav>
 
-<!-- Login Section -->
-<div class="container flex-grow-1 d-flex justify-content-center align-items-center" style="margin-top:100px;">
-  <div class="card p-4 shadow-lg login-card w-100" style="max-width: 400px;">
-    <h2 class="text-center mb-4">Admin Access Only</h2>
-    
-    <!-- This form submits to index.php -->
-    <form action="index.php" method="post" class="needs-validation" novalidate>
-      <div class="mb-3">
-        <input type="text" name="username" class="form-control form-control-lg" placeholder="Username" required />
-        <div class="invalid-feedback">Please enter your username.</div>
+
+<!-- Hero Section with dark background -->
+<section class="hero-section">
+  <div class="container py-5">
+    <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+         alt="Modern gym interior" class="hero-image d-none d-lg-block">
+    <div class="row align-items-center hero-content">
+      <div class="col-lg-6">
+        <h1 class="display-4 fw-bold mb-4 hero-text">PROFESSIONAL GYM MANAGEMENT</h1>
+        <p class="lead mb-4 hero-text hero-text-delay-1">Complete solution for gym owners to manage members, trainers, payments and facilities.</p>
+        <div class="d-flex gap-3 hero-text hero-text-delay-2">
+          <button class="btn btn-primary btn-lg btn-hover-shadow px-4" data-bs-toggle="modal" data-bs-target="#loginModal">
+            <i class="fas fa-sign-in-alt me-2"></i>ADMIN LOGIN
+          </button>
+        </div>
       </div>
-      <div class="mb-4">
-        <input type="password" name="pwd" class="form-control form-control-lg" placeholder="Password" required />
-        <div class="invalid-feedback">Please enter your password.</div>
-      </div>
-      <button type="submit" name="login_user" class="btn btn-primary w-100 btn-lg fw-semibold btn-hover-shadow">Login</button>
-    </form>
+    </div>
   </div>
-</div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+  <div class="container py-5">
+    <h2 class="text-center mb-5 display-5 fw-bold">MANAGEMENT FEATURES</h2>
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="feature-card p-4 rounded-3 h-100 shadow">
+          <div class="text-center mb-3">
+            <i class="fas fa-users fa-3x text-primary mb-3 feature-icon"></i>
+            <h3>MEMBER MANAGEMENT</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card p-4 rounded-3 h-100 shadow">
+          <div class="text-center mb-3">
+            <i class="fas fa-dumbbell fa-3x text-primary mb-3 feature-icon"></i>
+            <h3>GYM MANAGEMENT</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card p-4 rounded-3 h-100 shadow">
+          <div class="text-center mb-3">
+            <i class="fas fa-user-tie fa-3x text-primary mb-3 feature-icon"></i>
+            <h3>TRAINER MANAGEMENT</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card p-4 rounded-3 h-100 shadow">
+          <div class="text-center mb-3">
+            <i class="fas fa-credit-card fa-3x text-primary mb-3 feature-icon"></i>
+            <h3>PAYMENT MANAGEMENT</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- Footer -->
-<footer class="bg-gradient-primary text-center text-white py-3 mt-auto footer-shadow">
-  &copy; <span id="year"></span> Gym Management System
+<footer class="py-4 mt-auto">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 mb-3 mb-md-0 text-start">
+        <h5 class="text-uppercase fw-bold footer-text">GYM MANAGEMENT SYSTEM</h5>
+        <p class="mb-0 footer-text">Complete solution for gym administration</p>
+      </div>
+      <div class="col-md-6 text-end">
+        <ul class="list-unstyled d-flex justify-content-end gap-4">
+          <li><a href="#" class="footer-link">HOME</a></li>
+          <li><a href="#" class="footer-link" data-bs-toggle="modal" data-bs-target="#contactModal">CONTACT</a></li>
+          <li><a href="#" class="footer-link" data-bs-toggle="modal" data-bs-target="#loginModal">LOGIN</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="my-4 bg-secondary">
+    <div class="text-center footer-text">
+      &copy; <span id="year"></span> Gym Management System. All rights reserved.
+    </div>
+  </div>
 </footer>
 
-<!-- Background layers -->
-<div class="background-image"></div>
-<div class="background-overlay"></div>
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content login-modal-card border-0 shadow-lg">
+      <div class="modal-header border-bottom border-secondary">
+        <h5 class="modal-title fw-bold" id="loginModalLabel">
+          <i class="fas fa-sign-in-alt me-2 text-primary"></i>ADMIN LOGIN
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="loginError" class="error-message">
+          <i class="fas fa-exclamation-circle me-2"></i>Invalid username or password. Please try again.
+        </div>
+        <form id="loginForm" action="index.php" method="post" class="needs-validation" novalidate>
+          <div class="mb-4">
+            <label for="username" class="form-label fw-bold">USERNAME</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-user"></i></span>
+              <input type="text" class="form-control form-control-lg" id="username" name="username" placeholder="Enter your username" required>
+              <div class="invalid-feedback">Please enter your username.</div>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label for="password" class="form-label fw-bold">PASSWORD</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              <input type="password" class="form-control form-control-lg" id="password" name="pwd" placeholder="Enter your password" required>
+              <div class="invalid-feedback">Please enter your password.</div>
+            </div>
+          </div>
+          <button type="submit" name="login_user" class="btn btn-primary w-100 btn-lg fw-bold btn-hover-shadow mt-3">
+            LOGIN
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Contact Modal -->
 <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content bg-dark text-light">
-      <div class="modal-header">
-        <h5 class="modal-title" id="contactModalLabel">Contact Details</h5>
+      <div class="modal-header border-bottom border-secondary">
+        <h5 class="modal-title fw-bold" id="contactModalLabel">
+          <i class="fas fa-phone-alt me-2 text-primary"></i>CONTACT DETAILS
+        </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p><strong>Email:</strong> support@gymmanagement.com</p>
-        <p><strong>Phone:</strong> +1 (555) 123-4567</p>
-        <p><strong>Address:</strong> 123 Fitness St, Muscle City, Fitland</p>
-        <p>Feel free to reach out for any queries or support.</p>
+        <div class="mb-3">
+          <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-envelope me-3 text-primary fa-lg"></i>
+            <p class="mb-0"><strong>EMAIL:</strong> support@gymmanagement.com</p>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-phone me-3 text-primary fa-lg"></i>
+            <p class="mb-0"><strong>PHONE:</strong> +1 (555) 123-4567</p>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-map-marker-alt me-3 text-primary fa-lg"></i>
+            <p class="mb-0"><strong>ADDRESS:</strong> 123 Fitness St, Muscle City, Fitland</p>
+          </div>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+      <div class="modal-footer border-top border-secondary">
+        <button type="button" class="btn btn-outline-light btn-hover-shadow" data-bs-dismiss="modal">CLOSE</button>
       </div>
     </div>
   </div>
@@ -86,8 +511,8 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Validation + Year -->
 <script>
+  // Bootstrap form validation
   (() => {
     'use strict';
     const forms = document.querySelectorAll('.needs-validation');
@@ -102,8 +527,38 @@
     });
   })();
 
-  // Set current year
+  // Set current year in footer
   document.getElementById("year").textContent = new Date().getFullYear();
+
+  // Animate hero text after page load
+  document.addEventListener('DOMContentLoaded', function () {
+    const heroTexts = document.querySelectorAll('.hero-text');
+    setTimeout(() => {
+      heroTexts.forEach(text => {
+        text.classList.add('animated');
+      });
+    }, 300);
+
+    // Show login error from backend if redirected with ?error=1
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === '1') {
+      const errorElement = document.getElementById('loginError');
+      if (errorElement) {
+        errorElement.style.display = 'block';
+
+        // Show login modal if it's hidden
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        loginModal.show();
+
+        // Hide the error message after 5 seconds
+        setTimeout(() => {
+          errorElement.style.display = 'none';
+        }, 5000);
+      }
+    }
+  });
 </script>
+
+
 </body>
 </html>

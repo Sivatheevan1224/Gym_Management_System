@@ -114,4 +114,30 @@ body {
   h3, .mt-3 {
 	color: white;
   }
+  .bg-custom-dark {
+	background-color: rgba(33, 37, 41, 0.9) !important;
+	transition: background-color 0.3s ease;
+  }
+  .bg-custom-dark:hover {
+	background-color: rgba(33, 37, 41, 1) !important;
+  }
+  /* Add these to your style.css */
+.hover-gold {
+	transition: color 0.3s ease;
+  }
   
+  .hover-gold:hover {
+	color: #FFD700 !important;
+  }
+  
+  .feature-card {
+	perspective: 1000px;
+  }
+  
+  .modal-content {
+	border: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .btn-outline-light:hover {
+	color: #212529 !important;
+  }

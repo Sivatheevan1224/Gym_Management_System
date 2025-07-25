@@ -150,6 +150,23 @@ INSERT INTO `trainer` (`trainer_id`, `name`, `time`, `mobileno`, `pay_id`) VALUE
 ('T7', 'Jimmy Kimmel', '7:00 PM', '6688668866', 'Payment7'),
 ('T8', 'Ray Berlin', '9:00 PM', '6699669966', 'Payment8');
 
+
+-- Add gym_id column to member table
+ALTER TABLE `member` ADD COLUMN `gym_id` varchar(20) DEFAULT NULL AFTER `trainer_id`;
+
+-- Add foreign key constraint for gym_id
+ALTER TABLE `member` ADD CONSTRAINT `member_ibfk_3` FOREIGN KEY (`gym_id`) REFERENCES `gym` (`gym_id`);
+
+-- Update existing member records with gym_id based on their payment records
+UPDATE `member` m
+JOIN `payment` p ON m.pay_id = p.pay_id
+SET m.gym_id = p.gym_id;
+
+-- Update the member table structure to make gym_id non-null
+ALTER TABLE `member` MODIFY COLUMN `gym_id` varchar(20) NOT NULL;
+
+-- Remove the package column from member table
+ALTER TABLE `member` DROP COLUMN `package`;
 --
 -- Indexes for dumped tables
 --
@@ -221,6 +238,8 @@ ALTER TABLE `payment`
 ALTER TABLE `trainer`
   ADD CONSTRAINT `trainer_ibfk_1` FOREIGN KEY (`pay_id`) REFERENCES `payment` (`pay_id`);
 COMMIT;
+
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
