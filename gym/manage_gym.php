@@ -374,17 +374,46 @@ try {
         
         /* Responsive */
         @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
+            .form-section, 
+            .table-section {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
             }
-            
-            .form-actions {
+
+            .form-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .table {
+                font-size: 0.9rem;
+            }
+
+            td {
+                padding: 8px;
+            }
+
+            .action-btn {
+                padding: 6px 8px;
+                font-size: 0.8rem;
+            }
+
+            .search-box {
                 flex-direction: column;
             }
-            
-            th, td {
-                padding: 8px 10px;
+
+            .search-box button {
+                width: 100%;
             }
+        }
+
+        /* Table scroll for mobile */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -15px;
+            padding: 0 15px;
         }
     </style>
 </head>

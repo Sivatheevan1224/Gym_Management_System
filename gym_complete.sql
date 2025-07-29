@@ -1,17 +1,10 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Nov 23, 2019 at 05:06 AM
--- Server version: 10.4.8-MariaDB
--- PHP Version: 7.3.11
+-- Gym Management System Complete Database Setup
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
-
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -21,6 +14,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `gym`
 --
+CREATE DATABASE IF NOT EXISTS `gym`;
+USE `gym`;
 
 -- --------------------------------------------------------
 
@@ -48,53 +43,6 @@ INSERT INTO `gym` (`gym_id`, `gym_name`, `address`, `type`) VALUES
 ('GYM6', 'SHAPE GYM', 'Zion Colony', 'unisex'),
 ('GYM7', 'TITAN GYM', 'Old City', 'women'),
 ('GYM8', 'TIGERS TOP GYM', 'Madival Circle', 'men');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `login`
---
-
-CREATE TABLE `login` (
-  `id` int(10) NOT NULL,
-  `uname` varchar(30) NOT NULL,
-  `pwd` varchar(30) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `login`
---
-
-INSERT INTO `login` (`id`, `uname`, `pwd`) VALUES
-(1, 'admin', 'admin');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `member`
---
-
-CREATE TABLE `member` (
-  `mem_id` varchar(20) NOT NULL,
-  `name` varchar(30) DEFAULT NULL,
-  `dob` varchar(20) DEFAULT NULL,
-  `age` varchar(20) DEFAULT NULL,
-  `package` varchar(10) DEFAULT NULL,
-  `mobileno` varchar(10) DEFAULT NULL,
-  `pay_id` varchar(20) DEFAULT NULL,
-  `trainer_id` varchar(20) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `member`
---
-
-INSERT INTO `member` (`mem_id`, `name`, `dob`, `age`, `package`, `mobileno`, `pay_id`, `trainer_id`) VALUES
-('M1', 'Aditya', '18/08/1994', '26', '5200', '8888888888', 'Payment1', 'T1'),
-('M2', 'Karan', '26/06/1998', '21', '4800', '9988998899', 'Payment2', 'T2'),
-('M3', 'Chirag', '22/07/1997', '22', '6400', '9977997799', 'Payment3', 'T3'),
-('M4', 'Abhishek', '21/08/1998', '21', '5400', '9966996699', 'Payment4', 'T4'),
-('M5', 'Veeresh', '24/06/1999', '20', '6000', '9955995599', 'Payment5', 'T5');
 
 -- --------------------------------------------------------
 
@@ -150,57 +98,90 @@ INSERT INTO `trainer` (`trainer_id`, `name`, `time`, `mobileno`, `pay_id`) VALUE
 ('T7', 'Jimmy Kimmel', '7:00 PM', '6688668866', 'Payment7'),
 ('T8', 'Ray Berlin', '9:00 PM', '6699669966', 'Payment8');
 
+-- --------------------------------------------------------
 
--- Add gym_id column to member table
-ALTER TABLE `member` ADD COLUMN `gym_id` varchar(20) DEFAULT NULL AFTER `trainer_id`;
+--
+-- Table structure for table `member`
+--
 
--- Add foreign key constraint for gym_id
-ALTER TABLE `member` ADD CONSTRAINT `member_ibfk_3` FOREIGN KEY (`gym_id`) REFERENCES `gym` (`gym_id`);
+CREATE TABLE `member` (
+  `mem_id` varchar(20) NOT NULL,
+  `name` varchar(30) DEFAULT NULL,
+  `dob` varchar(20) DEFAULT NULL,
+  `age` varchar(20) DEFAULT NULL,
+  `mobileno` varchar(10) DEFAULT NULL,
+  `pay_id` varchar(20) DEFAULT NULL,
+  `trainer_id` varchar(20) DEFAULT NULL,
+  `gym_id` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
--- Update existing member records with gym_id based on their payment records
-UPDATE `member` m
-JOIN `payment` p ON m.pay_id = p.pay_id
-SET m.gym_id = p.gym_id;
+--
+-- Dumping data for table `member`
+--
 
--- Update the member table structure to make gym_id non-null
-ALTER TABLE `member` MODIFY COLUMN `gym_id` varchar(20) NOT NULL;
+INSERT INTO `member` (`mem_id`, `name`, `dob`, `age`, `mobileno`, `pay_id`, `trainer_id`, `gym_id`) VALUES
+('M1', 'Aditya', '18/08/1994', '26', '8888888888', 'Payment1', 'T1', 'GYM1'),
+('M2', 'Karan', '26/06/1998', '21', '9988998899', 'Payment2', 'T2', 'GYM2'),
+('M3', 'Chirag', '22/07/1997', '22', '9977997799', 'Payment3', 'T3', 'GYM3'),
+('M4', 'Abhishek', '21/08/1998', '21', '9966996699', 'Payment4', 'T4', 'GYM4'),
+('M5', 'Veeresh', '24/06/1999', '20', '9955995599', 'Payment5', 'T5', 'GYM5');
 
--- Remove the package column from member table
-ALTER TABLE `member` DROP COLUMN `package`;
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `login`
+--
+
+CREATE TABLE `login` (
+  `id` int(10) NOT NULL,
+  `uname` varchar(30) NOT NULL,
+  `pwd` varchar(255) NOT NULL,
+  `role` ENUM('admin', 'member') DEFAULT 'member',
+  `member_id` varchar(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping initial admin account
+--
+
+INSERT INTO `login` (`id`, `uname`, `pwd`, `role`) VALUES
+(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+
+-- Create member login accounts
+INSERT INTO login (uname, pwd, role, member_id)
+SELECT 
+    LOWER(REPLACE(name, ' ', '')) as uname,
+    -- Using name+age as password (will be hashed when members log in first time)
+    PASSWORD(CONCAT(LOWER(REPLACE(name, ' ', '')), age)) as pwd,
+    'member' as role,
+    mem_id as member_id
+FROM member m
+WHERE NOT EXISTS (
+    SELECT 1 FROM login l WHERE l.member_id = m.mem_id
+);
+
+-- --------------------------------------------------------
+
 --
 -- Indexes for dumped tables
 --
 
---
--- Indexes for table `gym`
---
 ALTER TABLE `gym`
   ADD PRIMARY KEY (`gym_id`);
 
---
--- Indexes for table `login`
---
 ALTER TABLE `login`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `member`
---
 ALTER TABLE `member`
   ADD PRIMARY KEY (`mem_id`),
   ADD KEY `pay_id` (`pay_id`),
-  ADD KEY `trainer_id` (`trainer_id`);
+  ADD KEY `trainer_id` (`trainer_id`),
+  ADD KEY `gym_id` (`gym_id`);
 
---
--- Indexes for table `payment`
---
 ALTER TABLE `payment`
   ADD PRIMARY KEY (`pay_id`),
   ADD KEY `gym_id` (`gym_id`);
 
---
--- Indexes for table `trainer`
---
 ALTER TABLE `trainer`
   ADD PRIMARY KEY (`trainer_id`),
   ADD KEY `pay_id` (`pay_id`);
@@ -209,9 +190,6 @@ ALTER TABLE `trainer`
 -- AUTO_INCREMENT for dumped tables
 --
 
---
--- AUTO_INCREMENT for table `login`
---
 ALTER TABLE `login`
   MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
@@ -219,27 +197,21 @@ ALTER TABLE `login`
 -- Constraints for dumped tables
 --
 
---
--- Constraints for table `member`
---
+ALTER TABLE `login`
+  ADD CONSTRAINT `login_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`mem_id`);
+
 ALTER TABLE `member`
   ADD CONSTRAINT `member_ibfk_1` FOREIGN KEY (`pay_id`) REFERENCES `payment` (`pay_id`),
-  ADD CONSTRAINT `member_ibfk_2` FOREIGN KEY (`trainer_id`) REFERENCES `trainer` (`trainer_id`);
+  ADD CONSTRAINT `member_ibfk_2` FOREIGN KEY (`trainer_id`) REFERENCES `trainer` (`trainer_id`),
+  ADD CONSTRAINT `member_ibfk_3` FOREIGN KEY (`gym_id`) REFERENCES `gym` (`gym_id`);
 
---
--- Constraints for table `payment`
---
 ALTER TABLE `payment`
   ADD CONSTRAINT `payment_ibfk_1` FOREIGN KEY (`gym_id`) REFERENCES `gym` (`gym_id`);
 
---
--- Constraints for table `trainer`
---
 ALTER TABLE `trainer`
   ADD CONSTRAINT `trainer_ibfk_1` FOREIGN KEY (`pay_id`) REFERENCES `payment` (`pay_id`);
+
 COMMIT;
-
-
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

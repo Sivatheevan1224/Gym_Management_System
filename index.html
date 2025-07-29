@@ -20,7 +20,8 @@
     
     /* Navbar */
     .navbar {
-      background: #111;
+      background: rgba(17, 17, 17, 0.95);
+      backdrop-filter: blur(10px);
       position: fixed;
       width: 100%;
       padding: 15px 20px;
@@ -29,6 +30,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.2);
     }
     
     .navbar-container {
@@ -48,6 +50,10 @@
       align-items: center;
       gap: 10px;
       color: #6FB1FC;
+      background: linear-gradient(45deg, #4364F7, #6FB1FC);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: all 0.3s ease;
     }
     
     .logo-img {
@@ -73,10 +79,27 @@
       cursor: pointer;
       transition: color 0.3s ease;
       white-space: nowrap;
+      position: relative;
+      padding: 5px 0;
     }
     
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #4364F7;
+      transition: width 0.3s ease;
+    }
+
     .nav-link:hover {
       color: #4a90e2;
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
     }
     
     .btn-login {
@@ -89,17 +112,26 @@
       cursor: pointer;
       font-size: 1rem;
       transition: background-color 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(67, 100, 247, 0.3);
     }
     
     .btn-login:hover {
       background-color: #2e47c7;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(67, 100, 247, 0.4);
+    }
+    
+    .btn-login:active {
+      transform: translateY(1px);
     }
 
     /* Hero Slider - Full width */
     .hero-slider {
       margin-top: 70px;
       position: relative;
-      height: 500px;
+      height: 700px;
       width: 100%;
       margin-left: auto;
       margin-right: auto;
@@ -112,7 +144,7 @@
     
     .slides img {
       width: 100%;
-      height: 500px;
+      height: 700px;
       object-fit: cover;
       position: absolute;
       opacity: 0;
@@ -139,19 +171,25 @@
     }
     
     .hero-text-box h2 {
-      font-size: 2.5rem;
+      font-size: 3rem;
       margin-bottom: 20px;
       opacity: 0;
       transform: translateY(20px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
+      transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      background: linear-gradient(45deg, #4364F7, #6FB1FC);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     
     .hero-text-box p {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
+      line-height: 1.6;
       margin-bottom: 30px;
       opacity: 0;
       transform: translateY(20px);
-      transition: opacity 0.6s ease 0.15s, transform 0.6s ease 0.15s;
+      transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }
     
     .hero-text-box h2.animated,
@@ -199,27 +237,48 @@
       margin: 0 auto;
     }
     
+    /* Enhanced feature cards with hover effects */
     .feature-card {
-      background: #2d2d2d;
-      border-radius: 10px;
-      padding: 20px;
+      background: linear-gradient(145deg, #2d2d2d, #222);
+      border-radius: 15px;
+      padding: 25px;
       width: 220px;
       text-align: center;
-      transition: transform 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
     
     .feature-card:hover {
-      transform: scale(1.05);
+      transform: translateY(-10px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.4);
+    }
+    
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: 0.5s;
+    }
+    
+    .feature-card:hover::before {
+      left: 100%;
     }
     
     .feature-card img {
-      width: 60px;
+      width: 70px;
       margin-bottom: 20px;
+      transition: transform 0.3s ease;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
     }
     
-    .feature-card h3 {
-      font-weight: 700;
-      font-size: 1.1rem;
+    .feature-card:hover img {
+      transform: scale(1.1) rotate(5deg);
     }
 
     /* Footer */
@@ -255,13 +314,13 @@
     }
     
     .modal-dialog {
-      background: #222;
-      border-radius: 8px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.8);
+      background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.9);
       max-width: 420px;
       width: 100%;
       color: #fff;
-      animation: fadeInScale 0.3s ease forwards;
+      animation: fadeInScale 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
     }
     
     @keyframes fadeInScale {
@@ -319,10 +378,16 @@
     .input-group {
       display: flex;
       align-items: center;
-      background: #333;
+      background: linear-gradient(145deg, #333, #2a2a2a);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
       border-radius: 6px;
       margin-bottom: 1rem;
-      border: 1px solid #555;
+    }
+    
+    .input-group:focus-within {
+      border-color: #4364F7;
+      box-shadow: 0 0 0 3px rgba(67, 100, 247, 0.2);
     }
     
     .input-group span {
@@ -362,6 +427,27 @@
     
     button[type="submit"]:hover {
       background: #2e47c7;
+    }
+
+    /* Login options styles */
+    .login-options {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .login-button {
+      padding: 10px 20px;
+      background: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    
+    .login-button:hover {
+      background: #2980b9;
     }
 
     /* Responsive adjustments */
@@ -438,7 +524,7 @@
         <ul class="nav-menu">
           <li><a href="#" class="nav-link">HOME</a></li>
           <li><a href="#" class="nav-link" onclick="showContact()">CONTACT</a></li>
-          <li><button class="btn-login" onclick="showLogin()">ADMIN LOGIN</button></li>
+          <li><button class="btn-login" onclick="showLogin()">LOGIN</button></li>
         </ul>
       </nav>
     </div>
@@ -480,7 +566,6 @@
       </div>
     </div>
   </section>
-
   <!-- Footer -->
   <footer>
     <div class="container">
@@ -493,14 +578,14 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5>ADMIN LOGIN</h5>
+          <h5>LOGIN</h5>
           <button type="button" class="btn-close" aria-label="Close login modal" onclick="hideLogin()">&times;</button>
         </div>
         <div class="modal-body">
-          <div id="loginError">
+          <div id="loginError" style="display: none;">
             Invalid username or password. Please try again.
           </div>
-          <form id="loginForm" action="index.php" method="post">
+          <form id="loginForm" action="login/auth.php" method="post">
             <label for="username">USERNAME</label>
             <div class="input-group">
               <span>👤</span>
@@ -511,7 +596,8 @@
               <span>🔒</span>
               <input type="password" id="password" name="pwd" placeholder="Enter your password" required>
             </div>
-            <button type="submit" name="login_user">LOGIN</button>
+            <input type="hidden" name="login_user" value="1">
+            <button type="submit">LOGIN</button>
           </form>
         </div>
       </div>

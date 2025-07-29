@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once('../db.php');
 
 // Generate CSRF token if not exists
 if (empty($_SESSION['csrf_token'])) {
@@ -10,18 +11,46 @@ function isAuthenticated() {
     return isset($_SESSION['uname']) && !empty($_SESSION['uname']);
 }
 
-// Redirect if not authenticated
-if (!isAuthenticated() && basename($_SERVER['PHP_SELF']) != 'index.php') {
-    header("Location: ../index.php");
+// For authenticated pages, redirect to login if not logged in
+if (!isAuthenticated() && basename($_SERVER['PHP_SELF']) !== 'auth.php') {
+    header("Location: ../index.html");
     exit();
 }
 
-// Hashes the password using bcrypt algorithm for secure storage
-function hashPassword($password) {
-    return password_hash($password, PASSWORD_BCRYPT);
-}
+// Handle login request
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_user'])) {
+    $username = trim($_POST['username']);
+    $password = trim($_POST['pwd']);
 
-// Verifies the provided password against the stored hash
-function verifyPassword($password, $hash) {
-    return password_verify($password, $hash);
+    // Use prepared statement
+    $stmt = $conn->prepare("SELECT id, uname, pwd, role, member_id FROM login WHERE uname = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
+        
+        // Verify password
+        if (password_verify($password, $user['pwd'])) {
+            // Set session variables
+            $_SESSION['uname'] = $username;
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['member_id'] = $user['member_id'];
+            $_SESSION['user_id'] = $user['id'];
+            
+            // Redirect based on role
+            if ($user['role'] === 'admin') {
+                header("Location: ../home/home.php");
+            } else {
+                header("Location: ../member/member_dashboard.php");
+            }
+            exit();
+        }
+    }
+    
+    // If login fails
+    header("Location: ../index.html?error=1");
+    exit();
 }
+?>

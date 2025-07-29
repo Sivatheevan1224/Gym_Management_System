@@ -2,6 +2,30 @@
 require_once('../login/auth.php');
 require_once('../db.php');
 
+// Function to create member login account
+function createMemberAccount($mem_id, $name, $age) {
+    global $conn;
+    
+    // Generate username and password
+    $username = strtolower(str_replace(' ', '', $name)); // Just the name without spaces
+    $password = strtolower(str_replace(' ', '', $name)) . $age; // name+age as password
+    
+    // Hash the password using PHP's password_hash function
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    
+    try {
+        // Create login entry
+        $stmt = $conn->prepare("INSERT INTO login (uname, pwd, role, member_id) VALUES (?, ?, 'member', ?)");
+        $stmt->bind_param("sss", $username, $hashed_password, $mem_id);
+        $stmt->execute();
+        
+        return array($username, $password);
+    } catch (Exception $e) {
+        error_log("Error creating member account: " . $e->getMessage());
+        throw $e;
+    }
+}
+
 $action = $_GET['action'] ?? '';
 $mem_id = $_GET['id'] ?? '';
 $errors = [];
@@ -78,7 +102,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("INSERT INTO member (mem_id, name, age, dob, mobileno, pay_id, trainer_id, gym_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param("ssisssss", $mem_id, $name, $age, $dob, $mobileno, $pay_id, $trainer_id, $gym_id);
                 $stmt->execute();
-                $success = "Member added successfully!";
+                
+                // Create member login account
+                list($username, $password) = createMemberAccount($mem_id, $name, $age);
+                $success = "Member added successfully! Login credentials - Username: $username, Password: $password";
             } 
             elseif ($_POST['action'] === 'edit') {
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
@@ -102,13 +129,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Handle delete action
 if ($action === 'delete' && !empty($mem_id)) {
     try {
+        // Start transaction
+        $conn->begin_transaction();
+        
+        // First delete from login table
+        $stmt = $conn->prepare("DELETE FROM login WHERE member_id = ?");
+        $stmt->bind_param("s", $mem_id);
+        $stmt->execute();
+        
+        // Then delete from member table
         $stmt = $conn->prepare("DELETE FROM member WHERE mem_id = ?");
         $stmt->bind_param("s", $mem_id);
         $stmt->execute();
         
         if ($stmt->affected_rows > 0) {
+            // Commit transaction
+            $conn->commit();
             $success = "Member deleted successfully!";
         } else {
+            // Rollback if member not found
+            $conn->rollback();
             $errors[] = "Member not found.";
         }
         
@@ -117,6 +157,8 @@ if ($action === 'delete' && !empty($mem_id)) {
         exit();
         
     } catch (Exception $e) {
+        // Rollback on error
+        $conn->rollback();
         error_log("Delete error: " . $e->getMessage());
         $errors[] = "Error deleting member: " . $e->getMessage();
     }
@@ -298,41 +340,88 @@ try {
             font-size: 0.9rem;
             border: 1px solid #ddd;
             border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #28a745;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
         }
         
-        .form-actions {
-            display: flex;
-            gap: 10px;
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .form-section, 
+            .table-section {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+
+            .form-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            input, select {
+                padding: 10px;
+                font-size: 16px; /* Prevent zoom on mobile */
+            }
+
+            .form-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+                margin-bottom: 8px;
+                padding: 12px;
+            }
+
+            .search-box {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .search-box input {
+                width: 100%;
+                padding: 10px;
+            }
+
+            .search-box button {
+                width: 100%;
+                padding: 12px;
+            }
+
+            .table-responsive {
+                margin: 0 -15px;
+                padding: 0 15px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            td:last-child {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                margin: 2px 0;
+                padding: 10px;
+            }
         }
-        
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-        
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-        
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-        
-        .btn-success {
-            background: #2ecc71;
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #95a5a6;
-            color: white;
-        }
-        
+
         /* Table Styles */
         .search-box {
             margin-bottom: 15px;
@@ -400,21 +489,6 @@ try {
         .delete-btn {
             background: #e74c3c;
             color: white;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-actions {
-                flex-direction: column;
-            }
-            
-            th, td {
-                padding: 8px 10px;
-            }
         }
         
         /* Error and success messages */

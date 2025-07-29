@@ -1,16 +1,24 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
 <link rel="stylesheet" href="../home/home.css">
 
 <style>
 /* Sidebar Styles */
 .sidebar {
     width: 180px;
-    background-color: #343a40;
+    background: linear-gradient(135deg, rgba(8, 8, 8, 0.95), rgba(18, 18, 18, 0.9));
     color: white;
     position: fixed;
     height: 100vh;
     overflow-y: auto;
     transition: all 0.3s ease;
     z-index: 100;
+    top: 56px; /* Height of navbar */
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 .sidebar-menu {
@@ -31,17 +39,27 @@
     text-decoration: none;
     transition: all 0.3s ease;
     font-size: 0.9rem;
+    border-radius: 4px;
+    margin: 2px 8px;
 }
 
 .sidebar-link:hover, .sidebar-link.active {
-    background-color: #495057;
-    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #00d4ff;
+    transform: translateX(4px);
 }
 
 .sidebar-link img {
     height: 18px;
     width: 18px;
     margin-right: 10px;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.sidebar-link:hover img {
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 /* Responsive Styles */
@@ -49,12 +67,42 @@
     .sidebar {
         width: 100%;
         height: auto;
-        position: relative;
+        position: fixed;
         display: none;
+        background: linear-gradient(135deg, rgba(8, 8, 8, 0.97), rgba(18, 18, 18, 0.95));
+        backdrop-filter: blur(10px);
+        padding-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     
     .sidebar.active {
         display: block;
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .sidebar-menu {
+        padding: 10px;
+    }
+
+    .sidebar-link {
+        padding: 12px 20px;
+        margin: 5px 8px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-link:active {
+        transform: scale(0.98);
     }
 }
 </style>
@@ -101,13 +149,6 @@
 <script>
 // Toggle sidebar on mobile
 document.addEventListener('DOMContentLoaded', function() {
-    // This would be added by your main page script
-    // const menuToggle = document.createElement('button');
-    // menuToggle.className = 'menu-toggle';
-    // menuToggle.innerHTML = '☰';
-    // menuToggle.onclick = function() {
-    //     document.getElementById('sidebar').classList.toggle('active');
-    // };
-    // document.querySelector('.navbar').appendChild(menuToggle);
+    // Mobile menu toggle functionality is handled by the main page script
 });
 </script>

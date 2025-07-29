@@ -450,29 +450,37 @@ try {
             }
             
             .main-content {
-                margin-left: 300px;
+                margin-left: 0;
                 width: 100%;
+                padding: 15px;
+            }
+
+            .page-header {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                margin-left: 0;
+                padding: 10px;
             }
             
             .navbar-brand {
                 font-size: 1.2rem;
-            }
-            
-            .menu-toggle {
-                display: block;
-                background: none;
-                border: none;
-                color: white;
-                font-size: 1.5rem;
-                cursor: pointer;
             }
         }
         
         @media (max-width: 576px) {
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 10px;
             }
             
+            .intro-section {
+                margin: 10px;
+                padding: 15px;
+            }
+
             .intro-section h1 {
                 font-size: 1.5rem;
             }
@@ -491,7 +499,7 @@ try {
 <?php include('../navbar.php'); ?>
 
     <div class="container">
-    <?php include('../sidebar.php'); ?>
+        <?php include('../sidebar.php'); ?>
         <!-- Main Content -->
         <main class="main-content">
             <div class="page-header">
@@ -543,21 +551,8 @@ try {
     </div>
 
     <script>
-        // Toggle sidebar on mobile
         document.addEventListener('DOMContentLoaded', function() {
-            const menuToggle = document.createElement('button');
-            menuToggle.className = 'menu-toggle';
-            menuToggle.innerHTML = '☰';
-            menuToggle.onclick = function() {
-                document.getElementById('sidebar').classList.toggle('active');
-            };
-            
-            const navbar = document.querySelector('.navbar .navbar-brand');
-            if (window.innerWidth <= 768) {
-                navbar.parentNode.insertBefore(menuToggle, navbar.nextSibling);
-            }
-            
-            // Modal functionality
+            // Only keep modal functionality
             const logoutBtn = document.getElementById('logoutBtn');
             const logoutModal = document.getElementById('logoutModal');
             const closeModal = document.getElementById('closeModal');
@@ -575,36 +570,9 @@ try {
                 logoutModal.style.display = 'none';
             });
             
-            // Close modal when clicking outside
             window.addEventListener('click', function(event) {
                 if (event.target === logoutModal) {
                     logoutModal.style.display = 'none';
-                }
-            });
-            
-            // Responsive adjustments
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    const sidebar = document.getElementById('sidebar');
-                    sidebar.style.display = 'block';
-                    
-                    const existingToggle = document.querySelector('.menu-toggle');
-                    if (existingToggle) {
-                        existingToggle.remove();
-                    }
-                } else {
-                    const existingToggle = document.querySelector('.menu-toggle');
-                    if (!existingToggle) {
-                        const menuToggle = document.createElement('button');
-                        menuToggle.className = 'menu-toggle';
-                        menuToggle.innerHTML = '☰';
-                        menuToggle.onclick = function() {
-                            document.getElementById('sidebar').classList.toggle('active');
-                        };
-                        
-                        const navbar = document.querySelector('.navbar .navbar-brand');
-                        navbar.parentNode.insertBefore(menuToggle, navbar.nextSibling);
-                    }
                 }
             });
         });

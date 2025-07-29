@@ -273,41 +273,88 @@ try {
             font-size: 0.9rem;
             border: 1px solid #ddd;
             border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #17a2b8;
+            box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.2);
         }
         
-        .form-actions {
-            display: flex;
-            gap: 10px;
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .form-section, 
+            .table-section {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+
+            .form-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            input, select {
+                padding: 10px;
+                font-size: 16px; /* Prevent zoom on mobile */
+            }
+
+            .form-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+                margin-bottom: 8px;
+                padding: 12px;
+            }
+
+            .search-box {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .search-box input {
+                width: 100%;
+                padding: 10px;
+            }
+
+            .search-box button {
+                width: 100%;
+                padding: 12px;
+            }
+
+            .table-responsive {
+                margin: 0 -15px;
+                padding: 0 15px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            td:last-child {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                margin: 2px 0;
+                padding: 10px;
+            }
         }
-        
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-        
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-        
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-        
-        .btn-success {
-            background: #2ecc71;
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #95a5a6;
-            color: white;
-        }
-        
+
         /* Table Styles */
         .search-box {
             margin-bottom: 15px;
@@ -375,21 +422,6 @@ try {
         .delete-btn {
             background: #e74c3c;
             color: white;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-actions {
-                flex-direction: column;
-            }
-            
-            th, td {
-                padding: 8px 10px;
-            }
         }
         
         /* Error and success messages */

@@ -188,11 +188,47 @@ if (session_status() === PHP_SESSION_NONE) {
     height: 16px;
     margin-right: 5px;
 }
+
+/* Menu Toggle Button */
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 15px;
+    transition: all 0.3s ease;
+}
+
+.menu-toggle:hover {
+    color: #00d4ff;
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+    
+    .navbar-container {
+        position: relative;
+    }
+
+    .user-info {
+        margin-left: auto;
+    }
+
+    .user-name {
+        display: none;
+    }
+}
 </style>
 
 <nav class="navbar">
     <div class="navbar-container">
-        <a href="home.php" class="navbar-brand">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <a href="/GYM-MANAGEMENT-SYSTEM/home/home.php" class="navbar-brand">
             <img src="/GYM-MANAGEMENT-SYSTEM/images/dumbbell.png" alt="Gym Icon">
             GYM MANAGEMENT SYSTEM
         </a>
@@ -243,7 +279,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutModal = document.getElementById('logoutModal');
     const closeModal = document.getElementById('closeModal');
     const cancelLogout = document.getElementById('cancelLogout');
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
     
+    // Toggle sidebar
+    menuToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('active');
+    });
+    
+    // Hide sidebar on window resize if screen becomes larger
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            sidebar.style.display = 'block';
+        } else {
+            sidebar.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+        }
+    });
+
+    // Existing modal code
     logoutBtn.addEventListener('click', function() {
         logoutModal.style.display = 'flex';
     });
@@ -256,7 +309,6 @@ document.addEventListener('DOMContentLoaded', function() {
         logoutModal.style.display = 'none';
     });
     
-    // Close modal when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target === logoutModal) {
             logoutModal.style.display = 'none';
