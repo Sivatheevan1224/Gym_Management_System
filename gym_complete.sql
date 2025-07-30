@@ -134,6 +134,9 @@ INSERT INTO `member` (`mem_id`, `name`, `dob`, `age`, `mobileno`, `pay_id`, `tra
 -- Table structure for table `login`
 --
 
+
+
+
 CREATE TABLE `login` (
   `id` int(10) NOT NULL,
   `uname` varchar(30) NOT NULL,
