@@ -28,8 +28,9 @@ $member = $stmt->get_result()->fetch_assoc();
 <head>
     <title>Member Dashboard - <?= htmlspecialchars($member['name']) ?></title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../responsive.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
             background-image: url('../images/image1.jpg');
@@ -39,7 +40,6 @@ $member = $stmt->get_result()->fetch_assoc();
             color: #333;
             position: relative;
         }
-        
         body::before {
             content: '';
             position: fixed;
@@ -50,19 +50,16 @@ $member = $stmt->get_result()->fetch_assoc();
             background: rgba(0, 0, 0, 0.7);
             z-index: -1;
         }
-        
         .dashboard-container {
             padding: 20px;
             max-width: 1200px;
             margin: 80px auto 20px;
             animation: fadeIn 0.5s ease-in-out;
         }
-        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         .welcome-header {
             text-align: center;
             color: white;
@@ -73,13 +70,11 @@ $member = $stmt->get_result()->fetch_assoc();
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
         .welcome-header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        
         .cards-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -87,7 +82,6 @@ $member = $stmt->get_result()->fetch_assoc();
             margin-top: 25px;
             padding: 0 10px;
         }
-        
         .member-card {
             background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(51, 65, 85, 0.9));
             backdrop-filter: blur(15px);
@@ -103,7 +97,6 @@ $member = $stmt->get_result()->fetch_assoc();
             position: relative;
             overflow: hidden;
         }
-        
         .member-card::before {
             content: '';
             position: absolute;
@@ -115,12 +108,10 @@ $member = $stmt->get_result()->fetch_assoc();
             background-size: 200% 100%;
             animation: gradientShift 3s ease-in-out infinite;
         }
-        
         @keyframes gradientShift {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
         }
-        
         .member-card:hover {
             transform: translateY(-8px) scale(1.02);
             box-shadow: 
@@ -128,10 +119,8 @@ $member = $stmt->get_result()->fetch_assoc();
                 0 8px 20px rgba(0, 0, 0, 0.2);
             border-color: rgba(79, 70, 229, 0.4);
         }
-        
         .member-card:nth-child(1) { animation-delay: 0.2s; }
         .member-card:nth-child(2) { animation-delay: 0.4s; }
-        
         .member-card h2 {
             color: #f8fafc;
             font-size: 1.4rem;
@@ -148,17 +137,14 @@ $member = $stmt->get_result()->fetch_assoc();
             align-items: center;
             gap: 10px;
         }
-        
         .member-card:hover h2 {
             background-size: 100% 2px;
         }
-        
         .member-info {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
-        
         .info-item {
             margin-bottom: 0;
             padding: 15px 18px;
@@ -171,7 +157,6 @@ $member = $stmt->get_result()->fetch_assoc();
             position: relative;
             overflow: hidden;
         }
-        
         .info-item::before {
             content: '';
             position: absolute;
@@ -185,7 +170,6 @@ $member = $stmt->get_result()->fetch_assoc();
                 transparent);
             transition: left 0.5s ease;
         }
-        
         .info-item:hover {
             background: linear-gradient(135deg, 
                 rgba(79, 70, 229, 0.25), 
@@ -194,11 +178,9 @@ $member = $stmt->get_result()->fetch_assoc();
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(79, 70, 229, 0.25);
         }
-        
         .info-item:hover::before {
             left: 100%;
         }
-        
         .info-label {
             font-weight: 700;
             color: #cbd5e1;
@@ -208,77 +190,92 @@ $member = $stmt->get_result()->fetch_assoc();
             letter-spacing: 1px;
             position: relative;
         }
-        
         .info-value {
             color: #f1f5f9;
             font-size: 1.1rem;
             font-weight: 600;
             line-height: 1.4;
         }
-        
         .highlight {
             color: #ffffff !important;
             font-weight: 700;
             position: relative;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
-        
         /* Enhanced mobile responsiveness */
         @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 10px;
+                margin: 60px auto 10px;
+            }
+            .welcome-header {
+                padding: 12px;
+                font-size: 1.1rem;
+            }
+            .welcome-header h1 {
+                font-size: 1.7rem;
+            }
             .cards-container {
                 grid-template-columns: 1fr;
                 gap: 15px;
                 padding: 0 5px;
             }
-            
             .member-card {
-                padding: 18px 15px;
+                padding: 18px 10px;
                 margin: 0 5px;
             }
-            
             .member-card h2 {
-                font-size: 1.3rem;
+                font-size: 1.2rem;
                 margin-bottom: 15px;
             }
-            
             .member-info {
                 grid-template-columns: 1fr;
                 gap: 12px;
             }
-            
             .info-item {
-                padding: 12px 15px;
+                padding: 12px 10px;
             }
-            
             .info-value {
                 font-size: 1rem;
             }
         }
-        
         @media (max-width: 480px) {
-            .member-card {
-                padding: 15px 12px;
-                border-radius: 15px;
+            .dashboard-container {
+                padding: 5px;
+                margin: 40px auto 5px;
             }
-            
+            .welcome-header {
+                padding: 8px;
+                font-size: 1rem;
+            }
+            .welcome-header h1 {
+                font-size: 1.1rem;
+            }
+            .member-card {
+                padding: 12px 5px;
+                border-radius: 12px;
+            }
             .member-card h2 {
-                font-size: 1.2rem;
+                font-size: 1rem;
                 flex-direction: column;
                 text-align: center;
                 gap: 5px;
             }
-            
             .info-item {
-                padding: 10px 12px;
+                padding: 8px 6px;
             }
-            
             .info-label {
                 font-size: 0.75rem;
             }
-            
             .info-value {
-                font-size: 0.95rem;
+                font-size: 0.9rem;
             }
+        }
+        /* Make images responsive if any */
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
         }
     </style>
 </head>

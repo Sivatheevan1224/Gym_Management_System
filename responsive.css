@@ -1,0 +1,51 @@
+/* Responsive base styles */
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.container, .navbar-container, .footer-content, .feature-grid, .footer-grid {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0 15px;
+}
+
+/* Responsive typography */
+body {
+  font-size: 1rem;
+}
+@media (max-width: 768px) {
+  .hero-text-box h2 { font-size: 2.5rem; }
+  .features h2 { font-size: 1.7rem; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .navbar, .navbar-container { padding: 10px; }
+  .footer-content, .footer-grid { padding: 10px; }
+  .table-responsive, table {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+}
+@media (max-width: 480px) {
+  .hero-text-box h2 { font-size: 1.5rem; }
+  .features h2 { font-size: 1.2rem; }
+  .navbar, .navbar-container { flex-direction: column; }
+  .nav-menu { flex-direction: column; gap: 10px; }
+  .feature-card { padding: 20px 10px; }
+  .footer-grid { grid-template-columns: 1fr; }
+}
+
+/* Make images responsive */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Add the following lines to the <head> section of every HTML/PHP file:
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="responsive.css" />
+*/
