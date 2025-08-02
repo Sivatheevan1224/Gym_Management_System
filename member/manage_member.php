@@ -351,77 +351,114 @@ try {
         }
         
         /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .form-section, .table-section {
+                margin-left: 0;
+                max-width: 100%;
+            }
+        }
         @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
             .form-section, 
             .table-section {
                 margin-left: 0;
                 width: 100%;
                 padding: 15px;
             }
-
+            .main-content {
+                padding: 10px;
+            }
             .form-header {
                 flex-direction: column;
                 gap: 10px;
+                align-items: flex-start;
             }
-
             .form-grid {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
-
             .form-group {
-                margin-bottom: 15px;
+                margin-bottom: 10px;
             }
-
             input, select {
                 padding: 10px;
-                font-size: 16px; /* Prevent zoom on mobile */
+                font-size: 1rem;
             }
-
             .form-actions {
                 flex-direction: column;
                 width: 100%;
+                gap: 8px;
             }
-
             .form-actions .btn {
                 width: 100%;
                 margin-bottom: 8px;
                 padding: 12px;
             }
-
             .search-box {
                 flex-direction: column;
                 gap: 8px;
             }
-
             .search-box input {
                 width: 100%;
                 padding: 10px;
             }
-
             .search-box button {
                 width: 100%;
                 padding: 12px;
             }
-
             .table-responsive {
                 margin: 0 -15px;
                 padding: 0 15px;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-
+            table {
+                font-size: 0.95rem;
+            }
+            th, td {
+                padding: 8px 6px;
+                font-size: 0.95rem;
+            }
             td:last-child {
                 display: flex;
                 flex-direction: column;
+                gap: 4px;
             }
-
             .action-btn {
                 width: 100%;
                 margin: 2px 0;
                 padding: 10px;
+                font-size: 0.9rem;
             }
         }
-
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 5px;
+            }
+            .form-section, .table-section {
+                padding: 8px;
+            }
+            .form-title {
+                font-size: 1rem;
+            }
+            .form-header {
+                padding-bottom: 5px;
+            }
+            .form-actions .btn {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+            th, td {
+                padding: 6px 4px;
+                font-size: 0.85rem;
+            }
+            .search-box input, .search-box button {
+                font-size: 0.9rem;
+                padding: 8px;
+            }
+        }
         /* Table Styles */
         .search-box {
             margin-bottom: 15px;
@@ -515,6 +552,12 @@ try {
             font-size: 0.8rem;
             color: #6c757d;
             margin-top: 5px;
+        }
+        /* Make images responsive if any */
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
         }
     </style>
 </head>

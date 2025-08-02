@@ -374,37 +374,66 @@ try {
         
         /* Responsive */
         @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
             .form-section, 
             .table-section {
                 margin-left: 0;
                 width: 100%;
                 padding: 15px;
             }
-
+            .main-content {
+                padding: 10px;
+            }
             .form-header {
                 flex-direction: column;
                 gap: 10px;
             }
-
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
             .table {
                 font-size: 0.9rem;
             }
-
-            td {
+            th, td {
                 padding: 8px;
+                font-size: 0.95rem;
             }
-
             .action-btn {
                 padding: 6px 8px;
                 font-size: 0.8rem;
             }
-
             .search-box {
                 flex-direction: column;
+                gap: 8px;
             }
-
             .search-box button {
                 width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 5px;
+            }
+            .form-section, .table-section {
+                padding: 8px;
+            }
+            .form-title {
+                font-size: 1rem;
+            }
+            th, td {
+                padding: 6px 4px;
+                font-size: 0.85rem;
+            }
+            .form-actions .btn, .action-btn {
+                font-size: 0.8rem;
+                padding: 7px;
+            }
+            .search-box input {
+                font-size: 0.85rem;
             }
         }
 
@@ -414,6 +443,13 @@ try {
             -webkit-overflow-scrolling: touch;
             margin: 0 -15px;
             padding: 0 15px;
+        }
+
+        /* Make images responsive if any */
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
         }
     </style>
 </head>
