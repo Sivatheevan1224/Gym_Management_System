@@ -37,8 +37,13 @@ if (session_status() === PHP_SESSION_NONE) {
     align-items: center;
     font-size: 1.5rem;
     font-weight: bold;
-    color: white;
+    color: #6FB1FC;
+    background: linear-gradient(45deg, #4364F7, #6FB1FC);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     text-decoration: none;
+    transition: all 0.3s ease;
 }
 
 .navbar-brand img {
@@ -99,6 +104,7 @@ if (session_status() === PHP_SESSION_NONE) {
     display: flex;
     align-items: center;
     transition: background-color 0.3s ease;
+    font-weight: bold;
 }
 
 .logout-btn:hover {
@@ -134,6 +140,22 @@ if (session_status() === PHP_SESSION_NONE) {
     z-index: 2000;
     justify-content: center;
     align-items: center;
+}
+
+/* Remove all text decorations from modal elements */
+.modal * {
+    text-decoration: none !important;
+}
+
+.modal a {
+    text-decoration: none !important;
+}
+
+.modal a:hover,
+.modal a:focus,
+.modal a:active,
+.modal a:visited {
+    text-decoration: none !important;
 }
 
 .modal-content {
@@ -205,6 +227,14 @@ if (session_status() === PHP_SESSION_NONE) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    text-decoration: none !important;
+}
+
+.btn:hover,
+.btn:focus,
+.btn:active,
+.btn:visited {
+    text-decoration: none !important;
 }
 
 .btn-outline {
@@ -221,11 +251,31 @@ if (session_status() === PHP_SESSION_NONE) {
     background-color: #dc3545;
     border: 1px solid #dc3545;
     color: white;
+    text-decoration: none !important;
 }
 
 .btn-danger:hover {
     background-color: #c82333;
     border-color: #c82333;
+    text-decoration: none !important;
+}
+
+.btn-danger:focus,
+.btn-danger:active,
+.btn-danger:visited {
+    text-decoration: none !important;
+}
+
+/* Specifically target the logout link in modal */
+.modal-footer a.btn-danger {
+    text-decoration: none !important;
+}
+
+.modal-footer a.btn-danger:hover,
+.modal-footer a.btn-danger:focus,
+.modal-footer a.btn-danger:active,
+.modal-footer a.btn-danger:visited {
+    text-decoration: none !important;
 }
 
 .btn img {
@@ -352,30 +402,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 768) {
-                if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-                    sidebar.classList.remove('active');
-                    menuToggle.style.transform = 'rotate(0deg)';
-                }
-            }
-        });
-        
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                sidebar.classList.remove('active');
-                menuToggle.style.transform = 'rotate(0deg)';
-            }
-        });
-    }
-
-    // Existing modal code
-    if (logoutBtn && logoutModal) {
-        logoutBtn.addEventListener('click', function() {
-            logoutModal.style.display = 'flex';
-        });
-    }
-    
     if (closeModal && logoutModal) {
         closeModal.addEventListener('click', function() {
             logoutModal.style.display = 'none';
