@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gym Management - Admin Login</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <h1 class="logo">
+        <img src="../images/logo.png" alt="Logo" class="logo-img" />
+        GYM MANAGEMENT SYSTEM
+      </h1>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="#hero" class="nav-link">HOME</a></li>
+          <li><a href="#" class="nav-link" onclick="showContact()">CONTACT</a></li>
+          <li><button class="btn-login" onclick="showLogin()">LOGIN</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Slider - Full width -->
+  <section id="hero" class="hero-slider">
+    <div class="slides">
+      <img src="../images/image1.jpg" class="slide active" alt="Gym image 1">
+      <img src="../images/image2.jpg" class="slide" alt="Gym image 2">
+      <img src="../images/image3.jpg" class="slide" alt="Gym image 3">
+    </div>
+    <div class="hero-text-box">
+      <h2 class="hero-text">PROFESSIONAL GYM MANAGEMENT</h2>
+      <p class="hero-text">Complete solution for gym owners to manage members, trainers, payments and facilities.</p>
+      <button onclick="showLogin()">LOGIN</button>
+    </div>
+  </section>
+
+  <!-- Features - Full width -->
+  <section class="features">
+    <h2>MANAGEMENT FEATURES</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <img src="../images/member.png" alt="Member">
+        <h3>MEMBER MANAGEMENT</h3>
+      </div>
+      <div class="feature-card">
+        <img src="../images/dumbbell.png" alt="Gym">
+        <h3>GYM MANAGEMENT</h3>
+      </div>
+      <div class="feature-card">
+        <img src="../images/trainer.png" alt="Trainer">
+        <h3>TRAINER MANAGEMENT</h3>
+      </div>
+      <div class="feature-card">
+        <img src="../images/payment.png" alt="Payment">
+        <h3>PAYMENT MANAGEMENT</h3>
+      </div>
+    </div>
+  </section>
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h3>ABOUT US</h3>
+          <p>We are a leading gym management software provider, helping gym owners streamline their operations and grow their business efficiently with our comprehensive management tools.</p>
+        </div>
+        
+        <div class="footer-section">
+          <h3>QUICK LINKS</h3>
+          <ul>
+            <li><a href="#hero">🏠 Home</a></li>
+            <li><a href="#" onclick="showLogin()">⚡ LOGIN</a></li>
+            <li><a href="#" onclick="showContact()">📞 Contact</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-section">
+          <h3>SERVICES</h3>
+          <ul>
+            <li><a href="#">👥 Member Management</a></li>
+            <li><a href="#">🏋️ Gym Management</a></li>
+            <li><a href="#">🏃 Trainer Management</a></li>
+            <li><a href="#">💳 Payment Management</a></li>
+            <li><a href="#">♟️ Member Dashboard</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-section">
+          <h3>CONTACT INFO</h3>
+          <div class="contact-item">
+            <span class="contact-icon">📧</span>
+            <p>supportgymmanagement@gmail.com</p>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon">📞</span>
+            <p>+94 (77) 123 4567</p>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon">📍</span>
+            <p>Uva Wellasa University<br>Badulla, Sri Lanka</p>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon">⏰</span>
+            <p>24/7 Customer Support</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <p>&copy; <span id="year"></span> <span class="highlight">Gym Management System</span>. All rights reserved. | Designed with ❤️ for fitness professionals</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5>LOGIN</h5>
+          <button type="button" class="btn-close" aria-label="Close login modal" onclick="hideLogin()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="loginError" style="display: none;">
+            Invalid username or password. Please try again.
+          </div>
+          <form id="loginForm" action="../login/auth.php" method="post">
+            <label for="username">USERNAME</label>
+            <div class="input-group">
+              <span>👤</span>
+              <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            </div>
+            <label for="password">PASSWORD</label>
+            <div class="input-group">
+              <span>🔒</span>
+              <input type="password" id="password" name="pwd" placeholder="Enter your password" required>
+            </div>
+            <input type="hidden" name="login_user" value="1">
+            <button type="submit">LOGIN</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Modal -->
+  <div id="contactModal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            CONTACT DETAILS
+          </h5>
+          <button type="button" class="btn-close" aria-label="Close contact modal" onclick="hideContact()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div>
+            <div><p><strong>EMAIL:</strong> supportgymmanagement@gmail.com</p></div>
+            <div><p><strong>PHONE:</strong> +94 (77) 123 4567</p></div>
+            <div><p><strong>ADDRESS:</strong> Uva Wellasa University, Badulla, Sri Lanka</p></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline-light" onclick="hideContact()">CLOSE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Set current year in footer
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // Animate hero text after page load
+  document.addEventListener('DOMContentLoaded', function () {
+    const heroTexts = document.querySelectorAll('.hero-text');
+    setTimeout(() => {
+      heroTexts.forEach(text => {
+        text.classList.add('animated');
+      });
+    }, 300);
+
+    // Show login error from backend if redirected with ?error=1
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === '1') {
+      const errorElement = document.getElementById('loginError');
+      if (errorElement) {
+        errorElement.style.display = 'block';
+        showLogin();
+        setTimeout(() => errorElement.style.display = 'none', 5000);
+      }
+    }
+
+    // Hero slider logic (simple)
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slides img');
+    setInterval(() => {
+      slides[currentSlide].classList.remove('active');
+      currentSlide = (currentSlide + 1) % slides.length;
+      slides[currentSlide].classList.add('active');
+    }, 5000);
+  });
+
+  // Modal open/close functions
+  function showLogin() {
+    // Close contact modal if open
+    hideContact();
+    document.getElementById('loginModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function hideLogin() {
+    document.getElementById('loginModal').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  
+  function showContact() {
+    // Close login modal if open
+    hideLogin();
+    document.getElementById('contactModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function hideContact() {
+    document.getElementById('contactModal').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  // Close modals on clicking outside dialog
+  window.onclick = function(event) {
+    const loginModal = document.getElementById('loginModal');
+    const contactModal = document.getElementById('contactModal');
+    
+    if (event.target === loginModal) {
+      hideLogin();
+    }
+    if (event.target === contactModal) {
+      hideContact();
+    }
+  };
+
+  // Close modals on ESC
+  document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape") {
+      hideLogin();
+      hideContact();
+    }
+  });
+</script>
+</body>
+</html>

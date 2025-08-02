@@ -13,7 +13,7 @@ function isAuthenticated() {
 
 // For authenticated pages, redirect to login if not logged in
 if (!isAuthenticated() && basename($_SERVER['PHP_SELF']) !== 'auth.php') {
-    header("Location: ../index.html");
+    header("Location: ../index/index.html");
     exit();
 }
 
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_user'])) {
     }
     
     // If login fails
-    header("Location: ../index.html?error=1");
+    header("Location: ../index/index.html?error=1");
     exit();
 }
 ?>
