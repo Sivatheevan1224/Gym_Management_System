@@ -42,8 +42,21 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 .navbar-brand img {
-    height: 30px;
-    margin-right: 10px;
+    height: 50px;
+    margin-right: 15px;
+    border-radius: 50%;
+    padding: 6px;
+    background: linear-gradient(135deg, rgba(67, 100, 247, 0.1), rgba(111, 177, 252, 0.1));
+    border: 1px solid rgba(67, 100, 247, 0.3);
+    box-shadow: 0 3px 10px rgba(67, 100, 247, 0.3);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover img {
+    transform: scale(1.05) rotate(-2deg);
+    background: linear-gradient(135deg, rgba(67, 100, 247, 0.2), rgba(111, 177, 252, 0.2));
+    border-color: rgba(67, 100, 247, 0.5);
+    box-shadow: 0 5px 15px rgba(67, 100, 247, 0.5);
 }
 
 .user-info {
@@ -59,8 +72,21 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 .user-name img {
-    height: 20px;
-    margin-right: 5px;
+    height: 35px;
+    margin-right: 8px;
+    border-radius: 50%;
+    padding: 4px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.user-name:hover img {
+    transform: scale(1.1);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 
 .logout-btn {
@@ -80,8 +106,20 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 .logout-btn img {
-    height: 16px;
-    margin-right: 5px;
+    height: 24px;
+    margin-right: 8px;
+    border-radius: 50%;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.logout-btn:hover img {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
 }
 
 /* Modal Styles */
@@ -123,8 +161,14 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 .modal-header h5 img {
-    height: 20px;
-    margin-right: 10px;
+    height: 28px;
+    margin-right: 12px;
+    border-radius: 50%;
+    padding: 4px;
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+    transition: all 0.3s ease;
 }
 
 .close-btn {
@@ -185,8 +229,19 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 .btn img {
-    height: 16px;
-    margin-right: 5px;
+    height: 20px;
+    margin-right: 8px;
+    border-radius: 50%;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn:hover img {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Menu Toggle Button */
@@ -228,18 +283,18 @@ if (session_status() === PHP_SESSION_NONE) {
 <nav class="navbar">
     <div class="navbar-container">
         <button class="menu-toggle" id="menuToggle">☰</button>
-        <a href="/GYM-MANAGEMENT-SYSTEM/home/home.php" class="navbar-brand">
-            <img src="/GYM-MANAGEMENT-SYSTEM/images/dumbbell.png" alt="Gym Icon">
+        <a href="../home/home.php" class="navbar-brand">
+            <img src="../images/dumbbell.png" alt="Gym Icon">
             GYM MANAGEMENT SYSTEM
         </a>
         
         <div class="user-info">
             <span class="user-name">
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/user.png" alt="User Icon">
+                <img src="../images/user.png" alt="User Icon">
                 <?= htmlspecialchars($_SESSION['uname'] ?? 'Admin') ?>
             </span>
             <button class="logout-btn" id="logoutBtn">
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/logout.png" alt="Logout Icon">
+                <img src="../images/logout.png" alt="Logout Icon">
                 Logout
             </button>
         </div>
@@ -251,7 +306,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <div class="modal-content">
         <div class="modal-header">
             <h5>
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/logout.png" alt="Logout">
+                <img src="../images/logout.png" alt="Logout">
                 Confirm Logout
             </h5>
             <button class="close-btn" id="closeModal">&times;</button>
@@ -261,11 +316,11 @@ if (session_status() === PHP_SESSION_NONE) {
         </div>
         <div class="modal-footer">
             <button class="btn btn-outline" id="cancelLogout">
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/close.png" alt="Cancel">
+                <img src="../images/close.png" alt="Cancel">
                 Cancel
             </button>
-            <a href="/GYM-MANAGEMENT-SYSTEM/logout/logout.php" class="btn btn-danger">
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/logout.png" alt="Logout">
+            <a href="../logout/logout.php" class="btn btn-danger">
+                <img src="../images/logout.png" alt="Logout">
                 Logout
             </a>
         </div>
@@ -282,37 +337,63 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
     
-    // Toggle sidebar
-    menuToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('active');
-    });
-    
-    // Hide sidebar on window resize if screen becomes larger
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-            sidebar.style.display = 'block';
-        } else {
-            sidebar.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
-        }
-    });
+    // Toggle sidebar with improved mobile functionality
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Toggle the active class
+            sidebar.classList.toggle('active');
+            
+            // Add visual feedback to toggle button
+            menuToggle.style.transform = sidebar.classList.contains('active') ? 'rotate(90deg)' : 'rotate(0deg)';
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                    menuToggle.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('active');
+                menuToggle.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
 
     // Existing modal code
-    logoutBtn.addEventListener('click', function() {
-        logoutModal.style.display = 'flex';
-    });
+    if (logoutBtn && logoutModal) {
+        logoutBtn.addEventListener('click', function() {
+            logoutModal.style.display = 'flex';
+        });
+    }
     
-    closeModal.addEventListener('click', function() {
-        logoutModal.style.display = 'none';
-    });
-    
-    cancelLogout.addEventListener('click', function() {
-        logoutModal.style.display = 'none';
-    });
-    
-    window.addEventListener('click', function(event) {
-        if (event.target === logoutModal) {
+    if (closeModal && logoutModal) {
+        closeModal.addEventListener('click', function() {
             logoutModal.style.display = 'none';
-        }
-    });
+        });
+    }
+    
+    if (cancelLogout && logoutModal) {
+        cancelLogout.addEventListener('click', function() {
+            logoutModal.style.display = 'none';
+        });
+    }
+    
+    if (logoutModal) {
+        window.addEventListener('click', function(event) {
+            if (event.target === logoutModal) {
+                logoutModal.style.display = 'none';
+            }
+        });
+    }
 });
 </script>

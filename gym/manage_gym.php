@@ -418,10 +418,10 @@ try {
     </style>
 </head>
 <body>
-  <?php include('../navbar.php'); ?>
+  <?php include('../components/navbar/navbar.php'); ?>
     
     <div class="app-container">
-        <?php include('../sidebar.php'); ?>
+        <?php include('../components/sidebar/sidebar.php'); ?>
         
         <div class="main-content">
             <!-- Form Section at the TOP -->

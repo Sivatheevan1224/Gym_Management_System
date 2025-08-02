@@ -203,6 +203,9 @@ try {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             text-align: center;
             border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         .stats-card:hover {
@@ -212,10 +215,34 @@ try {
         
         .stats-icon {
             margin-bottom: 15px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
         }
         
         .stats-icon img {
-            height: 50px;
+            height: 90px;
+            width: 90px;
+            border-radius: 50%;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(67, 100, 247, 0.1), rgba(111, 177, 252, 0.1));
+            border: 2px solid rgba(67, 100, 247, 0.2);
+            box-shadow: 0 4px 15px rgba(67, 100, 247, 0.3);
+            transition: all 0.4s ease;
+            filter: drop-shadow(0 2px 8px rgba(67, 100, 247, 0.2));
+            display: block;
+            margin: 0 auto;
+            object-fit: contain;
+        }
+        
+        .stats-card:hover .stats-icon img {
+            transform: scale(1.15) rotate(5deg);
+            background: linear-gradient(135deg, rgba(67, 100, 247, 0.2), rgba(111, 177, 252, 0.2));
+            border-color: rgba(67, 100, 247, 0.4);
+            box-shadow: 0 8px 25px rgba(67, 100, 247, 0.5);
+            filter: drop-shadow(0 6px 15px rgba(67, 100, 247, 0.4));
         }
         
         .stats-number {
@@ -260,24 +287,58 @@ try {
         .intro-section {
             margin-bottom: 40px;
             text-align: center;
-            padding: 30px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 40px 30px;
+            background: linear-gradient(135deg, rgba(67, 100, 247, 0.1), rgba(111, 177, 252, 0.15));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
             margin-left: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .intro-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(67, 100, 247, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(111, 177, 252, 0.1) 0%, transparent 50%);
+            pointer-events: none;
         }
         
         .intro-section h1 {
-            font-size: 2rem;
-            margin-bottom: 15px;
-            color: #343a40;
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff, #e8f4fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             animation: fadeIn 1s ease;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 1px;
         }
         
         .intro-section p {
-            font-size: 1.1rem;
-            color: #6c757d;
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.9);
             animation: slideUp 1s ease;
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-weight: 400;
         }
         
         /* Modal Styles */
@@ -457,11 +518,45 @@ try {
 
             .page-header {
                 margin-left: 0;
+                text-align: center;
             }
 
             .stats-grid {
                 margin-left: 0;
                 padding: 10px;
+                max-width: 100%;
+                justify-items: center;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .stats-card {
+                width: 100%;
+                min-height: 200px;
+                max-width: 180px;
+                padding: 15px;
+                box-sizing: border-box;
+            }
+            
+            .stats-icon img {
+                height: 60px !important;
+                width: 60px !important;
+            }
+            
+            .stats-number {
+                font-size: 1.8rem;
+            }
+            
+            .stats-text {
+                font-size: 0.9rem;
+                margin-top: 8px;
+            }
+            
+            .intro-section {
+                margin-left: 0 !important;
+                margin-right: 0;
+                width: 100%;
+                max-width: 100%;
             }
             
             .navbar-brand {
@@ -471,35 +566,67 @@ try {
         
         @media (max-width: 576px) {
             .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                padding: 10px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                padding: 15px;
+                margin-left: 0;
+            }
+            
+            .stats-card {
+                width: 100%;
+                min-height: 180px;
+                max-width: none;
+                padding: 15px 10px;
+                box-sizing: border-box;
+            }
+            
+            .stats-icon img {
+                height: 50px !important;
+                width: 50px !important;
+            }
+            
+            .stats-number {
+                font-size: 1.6rem;
+                margin: 8px 0;
+            }
+            
+            .stats-text {
+                font-size: 0.85rem;
+                line-height: 1.2;
+                font-weight: 500;
             }
             
             .intro-section {
-                margin: 10px;
-                padding: 15px;
+                margin: 10px 0 !important;
+                padding: 20px 15px;
+                width: calc(100% - 20px);
+                max-width: none;
             }
 
             .intro-section h1 {
-                font-size: 1.5rem;
+                font-size: 2rem;
             }
             
             .intro-section p {
-                font-size: 1rem;
+                font-size: 1.1rem;
             }
             
             .page-title {
                 font-size: 1.5rem;
             }
+            
+            .page-header {
+                text-align: center;
+                margin: 0 0 20px 0;
+            }
         }
     </style>
 </head>
 <body>
-<?php include('../navbar.php'); ?>
-
-    <div class="container">
-        <?php include('../sidebar.php'); ?>
+<?php include('../components/navbar/navbar.php'); ?>
+    
+    <div class="app-container">
+        <?php include('../components/sidebar/sidebar.php'); ?>
         <!-- Main Content -->
         <main class="main-content">
             <div class="page-header">
