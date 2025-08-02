@@ -168,7 +168,7 @@ html, body {
 
 .hero-text-box {
   position: absolute;
-  top: 30%;
+  top: 20%;
   left: 50%;
   transform: translateX(-50%);
   max-width: 1200px;

@@ -2,6 +2,18 @@
 ob_start();
 session_start();
 
+// Check if user is logged in
+if (!isset($_SESSION['uname']) || empty($_SESSION['uname'])) {
+    header("Location: ../index/index.html");
+    exit();
+}
+
+// Check if user has admin role
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../index/index.html");
+    exit();
+}
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }

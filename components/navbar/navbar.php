@@ -10,18 +10,18 @@ if (session_status() === PHP_SESSION_NONE) {
 <nav class="navbar">
     <div class="navbar-container">
         <button class="menu-toggle" id="menuToggle">☰</button>
-        <a href="/GYM-MANAGEMENT-SYSTEM/home/home.php" class="navbar-brand">
-            <img src="/GYM-MANAGEMENT-SYSTEM/images/dumbbell.png" alt="Gym Icon">
+        <a href="../home/home.php" class="navbar-brand">
+            <img src="../images/dumbbell.png" alt="Gym Icon">
             GYM MANAGEMENT SYSTEM
         </a>
         
         <div class="user-info">
             <span class="user-name">
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/user.png" alt="User Icon">
+                <img src="../images/user1.png" alt="User Icon">
                 <?= htmlspecialchars($_SESSION['uname'] ?? 'Admin') ?>
             </span>
             <button class="logout-btn" id="logoutBtn">
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/logout.png" alt="Logout Icon">
+                <img src="../images/logout.png" alt="Logout Icon">
                 Logout
             </button>
         </div>
@@ -33,7 +33,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <div class="modal-content">
         <div class="modal-header">
             <h5>
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/logout.png" alt="Logout">
+                <img src="../images/logout.png" alt="Logout">
                 Confirm Logout
             </h5>
             <button class="close-btn" id="closeModal">&times;</button>
@@ -43,11 +43,11 @@ if (session_status() === PHP_SESSION_NONE) {
         </div>
         <div class="modal-footer">
             <button class="btn btn-outline" id="cancelLogout">
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/close.png" alt="Cancel">
+                <img src="../images/close.png" alt="Cancel">
                 Cancel
             </button>
-            <a href="/GYM-MANAGEMENT-SYSTEM/logout/logout.php" class="btn btn-danger">
-                <img src="/GYM-MANAGEMENT-SYSTEM/images/logout.png" alt="Logout">
+            <a href="../logout/logout.php" class="btn btn-danger">
+                <img src="../images/logout.png" alt="Logout">
                 Logout
             </a>
         </div>

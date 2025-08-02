@@ -1,5 +1,19 @@
 <?php ob_start(); ?>
 <?php
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['uname']) || empty($_SESSION['uname'])) {
+    header("Location: ../index/index.html");
+    exit();
+}
+
+// Check if user has admin role
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../index/index.html");
+    exit();
+}
+
 require_once('../db.php');
 
 // Fetch counts for dashboard
