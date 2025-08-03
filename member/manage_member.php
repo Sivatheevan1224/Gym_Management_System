@@ -105,12 +105,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Create member login account
                 list($username, $password) = createMemberAccount($mem_id, $name, $age);
-                $success = "Member added successfully! Login credentials - Username: $username, Password: $password";
+                
+                // Store success message and credentials in session instead of URL
+                $_SESSION['success_message'] = "Member added successfully!";
+                $_SESSION['login_credentials'] = array(
+                    'username' => $username,
+                    'password' => $password
+                );
+                
+                // Redirect without the long success message in URL
+                header("Location: manage_member.php?action=success");
+                exit();
             } 
             elseif ($_POST['action'] === 'edit') {
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
-                $stmt = $conn->prepare("UPDATE member SET mem_id = ?, name = ?, age = ?, dob = ?, mobileno = ?, pay_id = ?, trainer_id = ?, gym_id = ? WHERE mem_id = ?");
-                $stmt->bind_param("ssissssss", $mem_id, $name, $age, $dob, $mobileno, $pay_id, $trainer_id, $gym_id, $original_id);
+                // Don't update the mem_id - use original_id for WHERE clause
+                $stmt = $conn->prepare("UPDATE member SET name = ?, age = ?, dob = ?, mobileno = ?, pay_id = ?, trainer_id = ?, gym_id = ? WHERE mem_id = ?");
+                $stmt->bind_param("sissssss", $name, $age, $dob, $mobileno, $pay_id, $trainer_id, $gym_id, $original_id);
                 $stmt->execute();
                 $success = "Member updated successfully!";
             }
@@ -286,6 +297,27 @@ try {
                     </div>
                 <?php endif; ?>
                 
+                <?php 
+                // Display success message with login credentials from session
+                if ($action === 'success' && isset($_SESSION['success_message'])): ?>
+                    <div class="alert alert-success">
+                        <h4><?= htmlspecialchars($_SESSION['success_message']) ?></h4>
+                        <?php if (isset($_SESSION['login_credentials'])): ?>
+                            <div class="login-credentials">
+                                <h5>🔑 Login Credentials Created:</h5>
+                                <p><strong>Username:</strong> <?= htmlspecialchars($_SESSION['login_credentials']['username']) ?></p>
+                                <p><strong>Password:</strong> <?= htmlspecialchars($_SESSION['login_credentials']['password']) ?></p>
+                                <small>Please share these credentials with the member securely.</small>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php 
+                    // Clear the session variables after displaying
+                    unset($_SESSION['success_message']);
+                    unset($_SESSION['login_credentials']);
+                    ?>
+                <?php endif; ?>
+                
                 <form method="post" action="manage_member.php">
                     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                     <input type="hidden" name="action" value="<?= empty($member_data) ? 'add' : 'edit' ?>">
@@ -298,7 +330,11 @@ try {
                         <div class="form-group">
                             <label for="mem_id">Member ID</label>
                             <input type="text" id="mem_id" name="mem_id" 
-                                   value="<?= htmlspecialchars($member_data['mem_id'] ?? '') ?>" required>
+                                   value="<?= htmlspecialchars($member_data['mem_id'] ?? '') ?>" 
+                                   <?= !empty($member_data) ? 'readonly' : '' ?> required>
+                            <?php if (!empty($member_data)): ?>
+                                <small class="readonly-note">ID cannot be changed after creation</small>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="form-group">

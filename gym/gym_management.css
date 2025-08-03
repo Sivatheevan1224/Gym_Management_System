@@ -86,6 +86,14 @@ input, select {
     font-size: 0.9rem;
     border: 1px solid #ddd;
     border-radius: 4px;
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
 }
 
 .form-actions {
@@ -93,32 +101,79 @@ input, select {
     gap: 10px;
 }
 
+/* Enhanced Button Styles - Match Trainer Management */
 .btn {
-    padding: 8px 15px;
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.btn:hover {
-    transform: translateY(-1px);
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
 }
 
-.btn-primary {
-    background: #3498db;
-    color: white;
+.btn:hover::before {
+    left: 100%;
 }
 
 .btn-success {
-    background: #2ecc71;
+    background: linear-gradient(135deg, #28a745, #20c997, #17a2b8);
     color: white;
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838, #1e9b8a, #138496);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3, #004085);
+    color: white;
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0069d9, #004085, #002752);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
 }
 
 .btn-secondary {
-    background: #95a5a6;
+    background: linear-gradient(135deg, #6c757d, #5a6268, #495057);
     color: white;
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268, #495057, #343a40);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Table Styles */
@@ -186,23 +241,40 @@ th {
     color: white;
 }
 
-/* Alerts */
+/* Enhanced Alert Styles */
 .alert {
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    border: 1px solid;
 }
 
-.alert-error {
-    color: #e74c3c;
-    background-color: #fdf2f2;
-    border: 1px solid #fecaca;
+.alert-danger {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #dc2626;
 }
 
 .alert-success {
-    color: #155724;
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.1));
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #059669;
+}
+
+/* Form helpers */
+.form-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.readonly-note {
+    display: block;
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-style: italic;
+    margin-top: 5px;
 }
 
 /* Responsive */

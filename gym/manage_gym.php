@@ -77,19 +77,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("INSERT INTO gym (gym_id, gym_name, address, type) VALUES (?, ?, ?, ?)");
                 $stmt->bind_param("ssss", $gym_id, $name, $address, $type);
                 $stmt->execute();
-                $success = "Gym added successfully!";
+                
+                // Store success message in session instead of URL
+                $_SESSION['success_message'] = "Gym added successfully!";
+                header("Location: manage_gym.php?action=success");
+                exit();
             } 
             elseif ($_POST['action'] === 'edit') {
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
-                $stmt = $conn->prepare("UPDATE gym SET gym_id = ?, gym_name = ?, address = ?, type = ? WHERE gym_id = ?");
-                $stmt->bind_param("sssss", $gym_id, $name, $address, $type, $original_id);
+                // Don't update the gym_id - use original_id for both WHERE and values
+                $stmt = $conn->prepare("UPDATE gym SET gym_name = ?, address = ?, type = ? WHERE gym_id = ?");
+                $stmt->bind_param("ssss", $name, $address, $type, $original_id);
                 $stmt->execute();
-                $success = "Gym updated successfully!";
+                
+                // Store success message in session instead of URL
+                $_SESSION['success_message'] = "Gym updated successfully!";
+                header("Location: manage_gym.php?action=success");
+                exit();
             }
-            
-            // Redirect to avoid form resubmission
-            header("Location: manage_gym.php?success=" . urlencode($success));
-            exit();
             
         } catch (mysqli_sql_exception $e) {
             error_log("Database error: " . $e->getMessage());
@@ -113,10 +118,10 @@ if ($action === 'delete' && !empty($gym_id)) {
         $conn->query("DELETE FROM gym WHERE gym_id = '$gym_id'");
         
         $conn->commit();
-        $success = "Gym and all related data deleted successfully!";
         
-        // Redirect to avoid refresh issues
-        header("Location: manage_gym.php?success=" . urlencode($success));
+        // Store success message in session instead of URL
+        $_SESSION['success_message'] = "Gym and all related data deleted successfully!";
+        header("Location: manage_gym.php?action=success");
         exit();
         
     } catch (Exception $e) {
@@ -210,17 +215,18 @@ try {
                 </div>
                 
                 <?php if (!empty($errors)): ?>
-                    <div style="color: #e74c3c; margin-bottom: 15px; padding: 10px;  border-radius: 4px;">
+                    <div class="alert alert-danger">
                         <?php foreach ($errors as $error): ?>
                             <p><?= htmlspecialchars($error) ?></p>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
                 
-                <?php if (isset($_GET['success'])): ?>
-                    <div style="color: #155724; margin-bottom: 15px; padding: 10px; border-radius: 4px;">
-                        <?= htmlspecialchars($_GET['success']) ?>
+                <?php if (isset($_SESSION['success_message'])): ?>
+                    <div class="alert alert-success">
+                        <?= htmlspecialchars($_SESSION['success_message']) ?>
                     </div>
+                    <?php unset($_SESSION['success_message']); // Clear message after displaying ?>
                 <?php endif; ?>
                 
                 <form method="post" action="manage_gym.php">
@@ -235,7 +241,11 @@ try {
                         <div class="form-group">
                             <label for="gym_id">Gym ID</label>
                             <input type="text" id="gym_id" name="gym_id" 
-                                   value="<?= htmlspecialchars($gym_data['gym_id'] ?? '') ?>" required>
+                                   value="<?= htmlspecialchars($gym_data['gym_id'] ?? '') ?>" 
+                                   <?= !empty($gym_data) ? 'readonly' : '' ?> required>
+                            <?php if (!empty($gym_data)): ?>
+                                <small class="readonly-note">ID cannot be changed after creation</small>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="form-group">

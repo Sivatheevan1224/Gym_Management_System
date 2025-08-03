@@ -67,8 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } 
             elseif ($_POST['action'] === 'edit') {
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
-                $stmt = $conn->prepare("UPDATE trainer SET trainer_id = ?, name = ?, time = ?, mobileno = ?, pay_id = ? WHERE trainer_id = ?");
-                $stmt->bind_param("ssssss", $trainer_id, $name, $time, $mobileno, $pay_id, $original_id);
+                // Don't update the trainer_id - use original_id for WHERE clause
+                $stmt = $conn->prepare("UPDATE trainer SET name = ?, time = ?, mobileno = ?, pay_id = ? WHERE trainer_id = ?");
+                $stmt->bind_param("sssss", $name, $time, $mobileno, $pay_id, $original_id);
                 $stmt->execute();
                 $success = "Trainer updated successfully!";
             }
@@ -240,7 +241,11 @@ try {
                         <div class="form-group">
                             <label for="trainer_id">Trainer ID</label>
                             <input type="text" id="trainer_id" name="trainer_id" 
-                                   value="<?= htmlspecialchars($trainer_data['trainer_id'] ?? '') ?>" required>
+                                   value="<?= htmlspecialchars($trainer_data['trainer_id'] ?? '') ?>" 
+                                   <?= !empty($trainer_data) ? 'readonly' : '' ?> required>
+                            <?php if (!empty($trainer_data)): ?>
+                                <small class="readonly-note">ID cannot be changed after creation</small>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="form-group">
@@ -251,8 +256,9 @@ try {
                         
                         <div class="form-group">
                             <label for="time">Available Time</label>
-                            <input type="text" id="time" name="time" 
+                            <input type="time" id="time" name="time" 
                                    value="<?= htmlspecialchars($trainer_data['time'] ?? '') ?>" required>
+                            <div class="form-text">Select trainer's available time slot</div>
                         </div>
                         
                         <div class="form-group">

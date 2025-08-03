@@ -53,19 +53,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("INSERT INTO payment (pay_id, amount, gym_id) VALUES (?, ?, ?)");
                 $stmt->bind_param("sds", $pay_id, $amount, $gym_id);
                 $stmt->execute();
-                $success = "Payment area added successfully!";
+                
+                // Store success message in session instead of URL
+                $_SESSION['success_message'] = "Payment area added successfully!";
+                header("Location: manage_payment.php?action=success");
+                exit();
             } 
             elseif ($_POST['action'] === 'edit') {
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
-                $stmt = $conn->prepare("UPDATE payment SET pay_id = ?, amount = ?, gym_id = ? WHERE pay_id = ?");
-                $stmt->bind_param("sdss", $pay_id, $amount, $gym_id, $original_id);
+                // Don't update the pay_id - use original_id for WHERE clause
+                $stmt = $conn->prepare("UPDATE payment SET amount = ?, gym_id = ? WHERE pay_id = ?");
+                $stmt->bind_param("dss", $amount, $gym_id, $original_id);
                 $stmt->execute();
-                $success = "Payment area updated successfully!";
+                
+                // Store success message in session instead of URL
+                $_SESSION['success_message'] = "Payment area updated successfully!";
+                header("Location: manage_payment.php?action=success");
+                exit();
             }
-            
-            // Redirect to avoid form resubmission
-            header("Location: manage_payment.php?success=" . urlencode($success));
-            exit();
             
         } catch (mysqli_sql_exception $e) {
             error_log("Database error: " . $e->getMessage());
@@ -90,10 +95,10 @@ if ($action === 'delete' && !empty($pay_id)) {
         $conn->query("DELETE FROM payment WHERE pay_id = '$pay_id'");
         
         $conn->commit();
-        $success = "Payment area and all related data deleted successfully!";
         
-        // Redirect to avoid refresh issues
-        header("Location: manage_payment.php?success=" . urlencode($success));
+        // Store success message in session instead of URL
+        $_SESSION['success_message'] = "Payment area and all related data deleted successfully!";
+        header("Location: manage_payment.php?action=success");
         exit();
         
     } catch (Exception $e) {
@@ -213,9 +218,10 @@ try {
                     </div>
                 <?php endif; ?>
                 
-                <?php if (isset($_GET['success'])): ?>
+                <?php if (isset($_SESSION['success_message'])): ?>
                     <div class="alert alert-success">
-                        <?= htmlspecialchars($_GET['success']) ?>
+                        <?= htmlspecialchars($_SESSION['success_message']) ?>
+                        <?php unset($_SESSION['success_message']); // Clear message after displaying ?>
                     </div>
                 <?php endif; ?>
                 
@@ -231,7 +237,11 @@ try {
                         <div class="form-group">
                             <label for="pay_id">Payment Area ID</label>
                             <input type="text" id="pay_id" name="pay_id" 
-                                   value="<?= htmlspecialchars($payment_data['pay_id'] ?? '') ?>" required>
+                                   value="<?= htmlspecialchars($payment_data['pay_id'] ?? '') ?>" 
+                                   <?= !empty($payment_data) ? 'readonly' : '' ?> required>
+                            <?php if (!empty($payment_data)): ?>
+                                <small class="readonly-note">ID cannot be changed after creation</small>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="form-group">
