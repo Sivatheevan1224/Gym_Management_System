@@ -2,7 +2,7 @@
 require_once('../login/auth.php');
 require_once('../db.php');
 
-// Function to create member login account
+// Creates login credentials for new gym members automatically
 function createMemberAccount($mem_id, $name, $age) {
     global $conn;
     
@@ -26,20 +26,21 @@ function createMemberAccount($mem_id, $name, $age) {
     }
 }
 
+// Initialize variables for form processing and data display
 $action = $_GET['action'] ?? '';
 $mem_id = $_GET['id'] ?? '';
 $errors = [];
 $success = '';
 $member_data = [];
 
-// Form submission handling
+// Process form submissions for adding/editing members
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF validation
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die("CSRF validation failed.");
     }
 
-    // Sanitize inputs
+    // Sanitize all input data to prevent SQL injection
     $mem_id = $conn->real_escape_string(trim($_POST['mem_id'] ?? ''));
     $name = $conn->real_escape_string(trim($_POST['name'] ?? ''));
     $age = $conn->real_escape_string(trim($_POST['age'] ?? ''));
@@ -49,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $trainer_id = $conn->real_escape_string(trim($_POST['trainer_id'] ?? ''));
     $gym_id = $conn->real_escape_string(trim($_POST['gym_id'] ?? ''));
     
-    // Validation
+    // Validate all required fields with specific rules
     if (empty($mem_id)) {
         $errors[] = "Member ID is required.";
     }
@@ -82,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Gym is required.";
     }
     
-    // Check for duplicate ID when adding
+    // Check if member ID already exists when adding new member
     if ($_POST['action'] === 'add') {
         $check = $conn->prepare("SELECT mem_id FROM member WHERE mem_id = ?");
         $check->bind_param("s", $mem_id);
@@ -95,10 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check->close();
     }
     
-    // Process form if no errors
+    // Execute database operations if validation passes
     if (empty($errors)) {
         try {
             if ($_POST['action'] === 'add') {
+                // Insert new member record into database
                 $stmt = $conn->prepare("INSERT INTO member (mem_id, name, age, dob, mobileno, pay_id, trainer_id, gym_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param("ssisssss", $mem_id, $name, $age, $dob, $mobileno, $pay_id, $trainer_id, $gym_id);
                 $stmt->execute();
@@ -118,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             } 
             elseif ($_POST['action'] === 'edit') {
+                // Update existing member record in database
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
                 // Don't update the mem_id - use original_id for WHERE clause
                 $stmt = $conn->prepare("UPDATE member SET name = ?, age = ?, dob = ?, mobileno = ?, pay_id = ?, trainer_id = ?, gym_id = ? WHERE mem_id = ?");
@@ -137,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle delete action
+// Handle member deletion with transaction safety
 if ($action === 'delete' && !empty($mem_id)) {
     try {
         // Start transaction
@@ -175,7 +178,7 @@ if ($action === 'delete' && !empty($mem_id)) {
     }
 }
 
-// Fetch member data for editing
+// Fetch member data when editing existing member
 if ($action === 'edit' && !empty($mem_id)) {
     try {
         $stmt = $conn->prepare("SELECT * FROM member WHERE mem_id = ?");
@@ -194,7 +197,7 @@ if ($action === 'edit' && !empty($mem_id)) {
     }
 }
 
-// Fetch dropdown options
+// Load dropdown options for form selects (payments, trainers, gyms)
 try {
     $payment_options = $conn->query("SELECT pay_id, amount FROM payment");
     $trainer_options = $conn->query("SELECT trainer_id, name FROM trainer");
@@ -204,14 +207,14 @@ try {
     $errors[] = "Error fetching dropdown options.";
 }
 
-// Fetch all members for listing
+// Setup pagination and search for members list
 $search = $_GET['search'] ?? '';
 $page = max(1, intval($_GET['page'] ?? 1));
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
 try {
-    // Count total records for pagination
+    // Count total records for pagination calculation
     if (!empty($search)) {
         $search_term = "%$search%";
         $count_stmt = $conn->prepare("SELECT COUNT(*) FROM member WHERE mem_id LIKE ? OR name LIKE ?");
@@ -224,7 +227,7 @@ try {
     $total_records = $count_stmt->get_result()->fetch_row()[0];
     $total_pages = ceil($total_records / $limit);
     
-    // Fetch paginated records with related data
+    // Fetch members with related data for display table
     if (!empty($search)) {
         $stmt = $conn->prepare("
             SELECT m.*, p.amount, t.name AS trainer_name, g.gym_name 

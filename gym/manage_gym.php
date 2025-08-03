@@ -21,26 +21,27 @@ if (empty($_SESSION['csrf_token'])) {
 //require_once('../auth.php');
 require_once('../db.php');
 
+// Initialize variables for form processing and data display
 $action = $_GET['action'] ?? '';
 $gym_id = $_GET['id'] ?? '';
 $errors = [];
 $success = '';
 $gym_data = [];
 
-// Form submission handling
+// Process form submissions for adding/editing gyms
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF validation
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die("CSRF validation failed.");
     }
 
-    // Sanitize inputs
+    // Sanitize all input data to prevent SQL injection
     $gym_id = $conn->real_escape_string(trim($_POST['gym_id'] ?? ''));
     $name = $conn->real_escape_string(trim($_POST['name'] ?? ''));
     $address = $conn->real_escape_string(trim($_POST['address'] ?? ''));
     $type = $conn->real_escape_string(trim($_POST['type'] ?? ''));
     
-    // Validation
+    // Validate all required fields with specific rules
     if (empty($gym_id)) {
         $errors[] = "Gym ID is required.";
     }
@@ -57,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Invalid gym type.";
     }
     
-    // Check for duplicate ID when adding
+    // Check if gym ID already exists when adding new gym
     if ($_POST['action'] === 'add') {
         $check = $conn->prepare("SELECT gym_id FROM gym WHERE gym_id = ?");
         $check->bind_param("s", $gym_id);
@@ -70,10 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check->close();
     }
     
-    // Process form if no errors
+    // Execute database operations if validation passes
     if (empty($errors)) {
         try {
             if ($_POST['action'] === 'add') {
+                // Insert new gym record into database
                 $stmt = $conn->prepare("INSERT INTO gym (gym_id, gym_name, address, type) VALUES (?, ?, ?, ?)");
                 $stmt->bind_param("ssss", $gym_id, $name, $address, $type);
                 $stmt->execute();
@@ -84,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             } 
             elseif ($_POST['action'] === 'edit') {
+                // Update existing gym record in database
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
                 // Don't update the gym_id - use original_id for both WHERE and values
                 $stmt = $conn->prepare("UPDATE gym SET gym_name = ?, address = ?, type = ? WHERE gym_id = ?");
@@ -103,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle delete action
+// Handle gym deletion with cascading deletion of related data
 if ($action === 'delete' && !empty($gym_id)) {
     try {
         // Begin transaction for cascading deletes
@@ -131,7 +134,7 @@ if ($action === 'delete' && !empty($gym_id)) {
     }
 }
 
-// Fetch gym data for editing
+// Fetch gym data when editing existing gym
 if ($action === 'edit' && !empty($gym_id)) {
     try {
         $stmt = $conn->prepare("SELECT * FROM gym WHERE gym_id = ?");
@@ -150,14 +153,14 @@ if ($action === 'edit' && !empty($gym_id)) {
     }
 }
 
-// Fetch all gyms for listing
+// Setup pagination and search for gyms list
 $search = $_GET['search'] ?? '';
 $page = max(1, intval($_GET['page'] ?? 1));
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
 try {
-    // Count total records for pagination
+    // Count total records for pagination calculation
     if (!empty($search)) {
         $search_term = "%$search%";
         $count_stmt = $conn->prepare("SELECT COUNT(*) FROM gym WHERE gym_id LIKE ? OR gym_name LIKE ? OR address LIKE ? OR type LIKE ?");
@@ -170,7 +173,7 @@ try {
     $total_records = $count_stmt->get_result()->fetch_row()[0];
     $total_pages = ceil($total_records / $limit);
     
-    // Fetch paginated records
+    // Fetch gyms for display table with pagination
     if (!empty($search)) {
         $stmt = $conn->prepare("SELECT * FROM gym WHERE gym_id LIKE ? OR gym_name LIKE ? OR address LIKE ? OR type LIKE ? LIMIT ? OFFSET ?");
         $stmt->bind_param("ssssii", $search_term, $search_term, $search_term, $search_term, $limit, $offset);

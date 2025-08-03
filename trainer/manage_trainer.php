@@ -2,27 +2,28 @@
 require_once('../login/auth.php');
 require_once('../db.php');
 
+// Initialize variables for form processing and data display
 $action = $_GET['action'] ?? '';
 $trainer_id = $_GET['id'] ?? '';
 $errors = [];
 $success = '';
 $trainer_data = [];
 
-// Form submission handling
+// Process form submissions for adding/editing trainers
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF validation
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die("CSRF validation failed.");
     }
 
-    // Sanitize inputs
+    // Sanitize all input data to prevent SQL injection
     $trainer_id = $conn->real_escape_string(trim($_POST['trainer_id'] ?? ''));
     $name = $conn->real_escape_string(trim($_POST['name'] ?? ''));
     $time = $conn->real_escape_string(trim($_POST['time'] ?? ''));
     $mobileno = $conn->real_escape_string(trim($_POST['mobileno'] ?? ''));
     $pay_id = $conn->real_escape_string(trim($_POST['pay_id'] ?? ''));
     
-    // Validation
+    // Validate all required fields with specific rules
     if (empty($trainer_id)) {
         $errors[] = "Trainer ID is required.";
     }
@@ -43,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Payment plan is required.";
     }
     
-    // Check for duplicate ID when adding
+    // Check if trainer ID already exists when adding new trainer
     if ($_POST['action'] === 'add') {
         $check = $conn->prepare("SELECT trainer_id FROM trainer WHERE trainer_id = ?");
         $check->bind_param("s", $trainer_id);
@@ -56,16 +57,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check->close();
     }
     
-    // Process form if no errors
+    // Execute database operations if validation passes
     if (empty($errors)) {
         try {
             if ($_POST['action'] === 'add') {
+                // Insert new trainer record into database
                 $stmt = $conn->prepare("INSERT INTO trainer (trainer_id, name, time, mobileno, pay_id) VALUES (?, ?, ?, ?, ?)");
                 $stmt->bind_param("sssss", $trainer_id, $name, $time, $mobileno, $pay_id);
                 $stmt->execute();
                 $success = "Trainer added successfully!";
             } 
             elseif ($_POST['action'] === 'edit') {
+                // Update existing trainer record in database
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
                 // Don't update the trainer_id - use original_id for WHERE clause
                 $stmt = $conn->prepare("UPDATE trainer SET name = ?, time = ?, mobileno = ?, pay_id = ? WHERE trainer_id = ?");
@@ -85,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle delete action
+// Handle trainer deletion with cascading member deletion
 if ($action === 'delete' && !empty($trainer_id)) {
     try {
         // Begin transaction for cascading deletes
@@ -111,7 +114,7 @@ if ($action === 'delete' && !empty($trainer_id)) {
     }
 }
 
-// Fetch trainer data for editing
+// Fetch trainer data when editing existing trainer
 if ($action === 'edit' && !empty($trainer_id)) {
     try {
         $stmt = $conn->prepare("SELECT * FROM trainer WHERE trainer_id = ?");
@@ -130,7 +133,7 @@ if ($action === 'edit' && !empty($trainer_id)) {
     }
 }
 
-// Fetch payment options for dropdown
+// Load payment options for form dropdown
 try {
     $payment_options = $conn->query("SELECT pay_id, amount FROM payment");
 } catch (mysqli_sql_exception $e) {
@@ -138,14 +141,14 @@ try {
     $errors[] = "Error fetching payment options.";
 }
 
-// Fetch all trainers for listing
+// Setup pagination and search for trainers list
 $search = $_GET['search'] ?? '';
 $page = max(1, intval($_GET['page'] ?? 1));
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
 try {
-    // Count total records for pagination
+    // Count total records for pagination calculation
     if (!empty($search)) {
         $search_term = "%$search%";
         $count_stmt = $conn->prepare("SELECT COUNT(*) FROM trainer WHERE trainer_id LIKE ? OR name LIKE ? OR time LIKE ? OR mobileno LIKE ?");
@@ -158,7 +161,7 @@ try {
     $total_records = $count_stmt->get_result()->fetch_row()[0];
     $total_pages = ceil($total_records / $limit);
     
-    // Fetch paginated records with payment info
+    // Fetch trainers with payment info for display table
     if (!empty($search)) {
         $stmt = $conn->prepare("
             SELECT t.*, p.amount 

@@ -2,25 +2,26 @@
 require_once('../login/auth.php');
 require_once('../db.php');
 
+// Initialize variables for form processing and data display
 $action = $_GET['action'] ?? '';
 $pay_id = $_GET['id'] ?? '';
 $errors = [];
 $success = '';
 $payment_data = [];
 
-// Form submission handling
+// Process form submissions for adding/editing payment areas
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF validation
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die("CSRF validation failed.");
     }
 
-    // Sanitize inputs
+    // Sanitize all input data to prevent SQL injection
     $pay_id = $conn->real_escape_string(trim($_POST['pay_id'] ?? ''));
     $amount = $conn->real_escape_string(trim($_POST['amount'] ?? ''));
     $gym_id = $conn->real_escape_string(trim($_POST['gym_id'] ?? ''));
     
-    // Validation
+    // Validate all required fields with specific rules
     if (empty($pay_id)) {
         $errors[] = "Payment ID is required.";
     }
@@ -33,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Gym is required.";
     }
     
-    // Check for duplicate ID when adding
+    // Check if payment ID already exists when adding new payment area
     if ($_POST['action'] === 'add') {
         $check = $conn->prepare("SELECT pay_id FROM payment WHERE pay_id = ?");
         $check->bind_param("s", $pay_id);
@@ -46,10 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check->close();
     }
     
-    // Process form if no errors
+    // Execute database operations if validation passes
     if (empty($errors)) {
         try {
             if ($_POST['action'] === 'add') {
+                // Insert new payment area record into database
                 $stmt = $conn->prepare("INSERT INTO payment (pay_id, amount, gym_id) VALUES (?, ?, ?)");
                 $stmt->bind_param("sds", $pay_id, $amount, $gym_id);
                 $stmt->execute();
@@ -60,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             } 
             elseif ($_POST['action'] === 'edit') {
+                // Update existing payment area record in database
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
                 // Don't update the pay_id - use original_id for WHERE clause
                 $stmt = $conn->prepare("UPDATE payment SET amount = ?, gym_id = ? WHERE pay_id = ?");
@@ -79,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle delete action
+// Handle payment area deletion with cascading trainer and member deletion
 if ($action === 'delete' && !empty($pay_id)) {
     try {
         // Begin transaction for cascading deletes
@@ -108,7 +111,7 @@ if ($action === 'delete' && !empty($pay_id)) {
     }
 }
 
-// Fetch payment data for editing
+// Fetch payment data when editing existing payment area
 if ($action === 'edit' && !empty($pay_id)) {
     try {
         $stmt = $conn->prepare("SELECT * FROM payment WHERE pay_id = ?");
@@ -127,7 +130,7 @@ if ($action === 'edit' && !empty($pay_id)) {
     }
 }
 
-// Fetch gym options for dropdown
+// Load gym options for form dropdown
 try {
     $gym_options = $conn->query("SELECT gym_id, gym_name FROM gym");
 } catch (mysqli_sql_exception $e) {
@@ -135,14 +138,14 @@ try {
     $errors[] = "Error fetching gym options.";
 }
 
-// Fetch all payments for listing
+// Setup pagination and search for payment areas list
 $search = $_GET['search'] ?? '';
 $page = max(1, intval($_GET['page'] ?? 1));
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
 try {
-    // Count total records for pagination
+    // Count total records for pagination calculation
     if (!empty($search)) {
         $search_term = "%$search%";
         $count_stmt = $conn->prepare("SELECT COUNT(*) FROM payment WHERE pay_id LIKE ?");
@@ -155,7 +158,7 @@ try {
     $total_records = $count_stmt->get_result()->fetch_row()[0];
     $total_pages = ceil($total_records / $limit);
     
-    // Fetch paginated records with gym info
+    // Fetch payment areas with gym info for display table
     if (!empty($search)) {
         $stmt = $conn->prepare("
             SELECT p.*, g.gym_name 
