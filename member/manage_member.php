@@ -26,12 +26,54 @@ function createMemberAccount($mem_id, $name, $age) {
     }
 }
 
+// Handle gym selection for filtering payment plans using sessions (clean URLs)
+if (isset($_POST['gym_change']) && !empty($_POST['selected_gym_id'])) {
+    // Store selected gym in session
+    $_SESSION['selected_gym_id'] = $_POST['selected_gym_id'];
+    
+    // Store all current form data in session to preserve it
+    $_SESSION['form_data'] = [
+        'mem_id' => $_POST['mem_id'] ?? '',
+        'name' => $_POST['name'] ?? '',
+        'age' => $_POST['age'] ?? '',
+        'dob' => $_POST['dob'] ?? '',
+        'mobileno' => $_POST['mobileno'] ?? '',
+        'trainer_id' => $_POST['trainer_id'] ?? ''
+    ];
+    
+    // Preserve edit mode if we're editing a member
+    $edit_member_id = $_POST['edit_member_id'] ?? '';
+    if (!empty($edit_member_id)) {
+        // Redirect back to edit mode with the member ID
+        header("Location: manage_member.php?action=edit&id=" . urlencode($edit_member_id));
+    } else {
+        // Redirect to clean URL without parameters (add mode)
+        header("Location: manage_member.php");
+    }
+    exit();
+}
+
+// Get form data from session or member data
+$selected_gym_id = $_SESSION['selected_gym_id'] ?? ($member_data['gym_id'] ?? '');
+$form_data = $_SESSION['form_data'] ?? [];
+
+// Debug: Check if URL parameters are being received (remove this after testing)
+// error_log("Selected Gym ID: " . $selected_gym_id);
+// error_log("Temp Data: " . print_r($_GET, true));
+
 // Initialize variables for form processing and data display
 $action = $_GET['action'] ?? '';
 $mem_id = $_GET['id'] ?? '';
 $errors = [];
 $success = '';
 $member_data = [];
+
+// Clear temporary session data when starting fresh (not gym filtering or editing)
+if (!isset($_POST['gym_change']) && $action !== 'edit' && $action !== 'success' && !isset($_SESSION['selected_gym_id'])) {
+    unset($_SESSION['temp_gym_id'], $_SESSION['temp_mem_id'], $_SESSION['temp_name'], 
+          $_SESSION['temp_age'], $_SESSION['temp_dob'], $_SESSION['temp_mobileno'], 
+          $_SESSION['temp_trainer_id'], $_SESSION['selected_gym_id'], $_SESSION['form_data']);
+}
 
 // Process form submissions for adding/editing members
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -115,6 +157,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'password' => $password
                 );
                 
+                // Clear temporary form data from session
+                unset($_SESSION['temp_gym_id'], $_SESSION['temp_mem_id'], $_SESSION['temp_name'], 
+                      $_SESSION['temp_age'], $_SESSION['temp_dob'], $_SESSION['temp_mobileno'], 
+                      $_SESSION['temp_trainer_id'], $_SESSION['selected_gym_id'], $_SESSION['form_data']);
+                
                 // Redirect without the long success message in URL
                 header("Location: manage_member.php?action=success");
                 exit();
@@ -126,6 +173,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("UPDATE member SET name = ?, age = ?, dob = ?, mobileno = ?, pay_id = ?, trainer_id = ?, gym_id = ? WHERE mem_id = ?");
                 $stmt->bind_param("sissssss", $name, $age, $dob, $mobileno, $pay_id, $trainer_id, $gym_id, $original_id);
                 $stmt->execute();
+                
+                // Clear temporary form data from session after successful edit
+                unset($_SESSION['selected_gym_id'], $_SESSION['form_data']);
+                
                 $success = "Member updated successfully!";
             }
             
@@ -199,7 +250,24 @@ if ($action === 'edit' && !empty($mem_id)) {
 
 // Load dropdown options for form selects (payments, trainers, gyms)
 try {
-    $payment_options = $conn->query("SELECT pay_id, amount FROM payment");
+    // If gym is selected via session, filter payment plans by gym using JOIN
+    if (!empty($selected_gym_id)) {
+        $payment_query = "
+            SELECT p.pay_id, p.amount, g.gym_name 
+            FROM payment p 
+            INNER JOIN gym g ON p.gym_id = g.gym_id 
+            WHERE p.gym_id = ?
+        ";
+        $payment_options = $conn->prepare($payment_query);
+        $payment_options->bind_param("s", $selected_gym_id);
+        $payment_options->execute();
+        $payment_options = $payment_options->get_result();
+        
+    } else {
+        // If no gym selected, show empty payment options
+        $payment_options = $conn->query("SELECT pay_id, amount FROM payment WHERE 1=0");
+    }
+    
     $trainer_options = $conn->query("SELECT trainer_id, name FROM trainer");
     $gym_options = $conn->query("SELECT gym_id, gym_name FROM gym");
 } catch (mysqli_sql_exception $e) {
@@ -238,7 +306,6 @@ try {
             WHERE m.mem_id LIKE ? OR m.name LIKE ?
             LIMIT ? OFFSET ?
         ");
-        $stmt->bind_param("ssii", $search_term, $search_term, $limit, $offset);
     } else {
         $stmt = $conn->prepare("
             SELECT m.*, p.amount, t.name AS trainer_name, g.gym_name 
@@ -248,22 +315,25 @@ try {
             LEFT JOIN gym g ON m.gym_id = g.gym_id
             LIMIT ? OFFSET ?
         ");
+    }
+    
+    // Bind parameters for pagination
+    if (!empty($search)) {
+        $stmt->bind_param("ssii", $search_term, $search_term, $limit, $offset);
+    } else {
         $stmt->bind_param("ii", $limit, $offset);
     }
     
     $stmt->execute();
     $members = $stmt->get_result();
-    
 } catch (mysqli_sql_exception $e) {
     error_log("Database error: " . $e->getMessage());
     $errors[] = "Error fetching members list.";
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Manage Members</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="member_management.css">
@@ -307,10 +377,10 @@ try {
                         <h4><?= htmlspecialchars($_SESSION['success_message']) ?></h4>
                         <?php if (isset($_SESSION['login_credentials'])): ?>
                             <div class="login-credentials">
-                                <h5>🔑 Login Credentials Created:</h5>
-                                <p><strong>Username:</strong> <?= htmlspecialchars($_SESSION['login_credentials']['username']) ?></p>
-                                <p><strong>Password:</strong> <?= htmlspecialchars($_SESSION['login_credentials']['password']) ?></p>
-                                <small>Please share these credentials with the member securely.</small>
+                                <h5 style="color: white !important;">🔑 Login Credentials Created:</h5>
+                                <p style="color: white !important; font-weight: bold;"><strong>Username:</strong> <?= htmlspecialchars($_SESSION['login_credentials']['username']) ?></p>
+                                <p style="color: white !important; font-weight: bold;"><strong>Password:</strong> <?= htmlspecialchars($_SESSION['login_credentials']['password']) ?></p>
+                                <small style="color: white !important;">Please share these credentials with the member securely.</small>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -333,7 +403,7 @@ try {
                         <div class="form-group">
                             <label for="mem_id">Member ID</label>
                             <input type="text" id="mem_id" name="mem_id" 
-                                   value="<?= htmlspecialchars($member_data['mem_id'] ?? '') ?>" 
+                                   value="<?= htmlspecialchars($member_data['mem_id'] ?? $form_data['mem_id'] ?? '') ?>" 
                                    <?= !empty($member_data) ? 'readonly' : '' ?> required>
                             <?php if (!empty($member_data)): ?>
                                 <small class="readonly-note">ID cannot be changed after creation</small>
@@ -343,40 +413,58 @@ try {
                         <div class="form-group">
                             <label for="name">Member Name</label>
                             <input type="text" id="name" name="name" 
-                                   value="<?= htmlspecialchars($member_data['name'] ?? '') ?>" required>
+                                   value="<?= htmlspecialchars($member_data['name'] ?? $form_data['name'] ?? '') ?>" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="age">Age</label>
                             <input type="number" id="age" name="age" 
-                                   value="<?= htmlspecialchars($member_data['age'] ?? '') ?>" 
+                                   value="<?= htmlspecialchars($member_data['age'] ?? $form_data['age'] ?? '') ?>" 
                                    min="12" max="100" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="dob">Date of Birth</label>
                             <input type="date" id="dob" name="dob" 
-                                   value="<?= htmlspecialchars($member_data['dob'] ?? '') ?>" required>
+                                   value="<?= htmlspecialchars($member_data['dob'] ?? $form_data['dob'] ?? '') ?>" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="mobileno">Mobile Number</label>
                             <input type="tel" id="mobileno" name="mobileno" 
-                                   value="<?= htmlspecialchars($member_data['mobileno'] ?? '') ?>" 
+                                   value="<?= htmlspecialchars($member_data['mobileno'] ?? $form_data['mobileno'] ?? '') ?>" 
                                    pattern="[0-9]{10,15}" required>
                             <div class="form-text">Enter 10 digits Sri Lankan number</div>
                         </div>
                         
                         <div class="form-group">
-                            <label for="pay_id">Payment Plan</label>
-                            <select id="pay_id" name="pay_id" required>
-                                <option value="">Select Payment Plan</option>
-                                <?php while ($payment = $payment_options->fetch_assoc()): ?>
-                                    <option value="<?= htmlspecialchars($payment['pay_id']) ?>" 
-                                        <?= (isset($member_data['pay_id']) && $member_data['pay_id'] === $payment['pay_id']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($payment['pay_id']) ?> - LKR <?= htmlspecialchars($payment['amount']) ?>
+                            <label for="gym_id">Gym</label>
+                            <select id="gym_id" name="gym_id" required onchange="handleGymChange(this.value)">
+                                <option value="">Select Gym</option>
+                                <?php while ($gym = $gym_options->fetch_assoc()): ?>
+                                    <option value="<?= htmlspecialchars($gym['gym_id']) ?>" 
+                                        <?= (isset($member_data['gym_id']) && $member_data['gym_id'] === $gym['gym_id']) ? 'selected' : '' ?>
+                                        <?= (isset($selected_gym_id) && $selected_gym_id === $gym['gym_id']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($gym['gym_id']) ?> - <?= htmlspecialchars($gym['gym_name']) ?>
                                     </option>
                                 <?php endwhile; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="pay_id">Payment Plan</label>
+                            <select id="pay_id" name="pay_id" required>
+                                <?php if (empty($selected_gym_id)): ?>
+                                    <option value="">Select Gym First</option>
+                                <?php else: ?>
+                                    <option value="">Select Payment Plan</option>
+                                    <?php while ($payment = $payment_options->fetch_assoc()): ?>
+                                        <option value="<?= htmlspecialchars($payment['pay_id']) ?>" 
+                                            <?= (isset($member_data['pay_id']) && $member_data['pay_id'] === $payment['pay_id']) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($payment['pay_id']) ?> - LKR <?= htmlspecialchars($payment['amount']) ?>
+                                        </option>
+                                    <?php endwhile; ?>
+                                <?php endif; ?>
                             </select>
                         </div>
                         
@@ -386,21 +474,9 @@ try {
                                 <option value="">Select Trainer</option>
                                 <?php while ($trainer = $trainer_options->fetch_assoc()): ?>
                                     <option value="<?= htmlspecialchars($trainer['trainer_id']) ?>" 
-                                        <?= (isset($member_data['trainer_id']) && $member_data['trainer_id'] === $trainer['trainer_id']) ? 'selected' : '' ?>>
+                                        <?= (isset($member_data['trainer_id']) && $member_data['trainer_id'] === $trainer['trainer_id']) ? 'selected' : '' ?>
+                                        <?= (isset($form_data['trainer_id']) && $form_data['trainer_id'] === $trainer['trainer_id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($trainer['trainer_id']) ?> - <?= htmlspecialchars($trainer['name']) ?>
-                                    </option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="gym_id">Gym</label>
-                            <select id="gym_id" name="gym_id" required>
-                                <option value="">Select Gym</option>
-                                <?php while ($gym = $gym_options->fetch_assoc()): ?>
-                                    <option value="<?= htmlspecialchars($gym['gym_id']) ?>" 
-                                        <?= (isset($member_data['gym_id']) && $member_data['gym_id'] === $gym['gym_id']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($gym['gym_id']) ?> - <?= htmlspecialchars($gym['gym_name']) ?>
                                     </option>
                                 <?php endwhile; ?>
                             </select>
@@ -415,6 +491,20 @@ try {
                             <a href="manage_member.php" class="btn btn-secondary">Cancel</a>
                         <?php endif; ?>
                     </div>
+                </form>
+                
+                <!-- Hidden form for gym change functionality (moved outside main form) -->
+                <form id="gymChangeForm" method="post" action="manage_member.php" style="display: none;">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                    <input type="hidden" name="gym_change" value="1">
+                    <input type="hidden" name="selected_gym_id" id="hidden_gym_id">
+                    <input type="hidden" name="edit_member_id" id="hidden_edit_member_id" value="<?= htmlspecialchars($member_data['mem_id'] ?? '') ?>">
+                    <input type="hidden" name="mem_id" id="hidden_mem_id">
+                    <input type="hidden" name="name" id="hidden_name">
+                    <input type="hidden" name="age" id="hidden_age">
+                    <input type="hidden" name="dob" id="hidden_dob">
+                    <input type="hidden" name="mobileno" id="hidden_mobileno">
+                    <input type="hidden" name="trainer_id" id="hidden_trainer_id">
                 </form>
             </div>
             
@@ -457,16 +547,13 @@ try {
                                     <td><?= htmlspecialchars($member['dob']) ?></td>
                                     <td><?= htmlspecialchars($member['mobileno']) ?></td>
                                     <td>
-                                        <?= htmlspecialchars($member['pay_id']) ?>
-                                        (LKR <?= htmlspecialchars($member['amount'] ?? 'N/A') ?>)
+                                        LKR <?= htmlspecialchars($member['amount'] ?? 'N/A') ?>
                                     </td>
                                     <td>
-                                        <?= htmlspecialchars($member['trainer_id']) ?>
-                                        (<?= htmlspecialchars($member['trainer_name'] ?? 'N/A') ?>)
+                                        <?= htmlspecialchars($member['trainer_name'] ?? 'N/A') ?>
                                     </td>
                                     <td>
-                                        <?= htmlspecialchars($member['gym_id']) ?>
-                                        (<?= htmlspecialchars($member['gym_name'] ?? 'N/A') ?>)
+                                        <?= htmlspecialchars($member['gym_name'] ?? 'N/A') ?>
                                     </td>
                                     <td>
                                         <button class="action-btn edit-btn" 
@@ -474,7 +561,8 @@ try {
                                             Edit
                                         </button>
                                         <button class="action-btn delete-btn" 
-                                                onclick="if(confirm('Are you sure you want to delete this member?')) location.href='manage_member.php?action=delete&id=<?= urlencode($member['mem_id']) ?>'">
+                                                data-member-id="<?= htmlspecialchars($member['mem_id']) ?>"
+                                                data-member-name="<?= htmlspecialchars($member['name']) ?>">
                                             Delete
                                         </button>
                                     </td>
@@ -530,11 +618,34 @@ try {
         // Confirm before delete
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
-                if (!confirm('Are you sure you want to delete this member?')) {
+                const memberId = this.getAttribute('data-member-id');
+                const memberName = this.getAttribute('data-member-name');
+                
+                if (confirm('Are you sure you want to delete member ID ' + memberId + ' - ' + memberName + '?')) {
+                    // Redirect to delete URL
+                    location.href = 'manage_member.php?action=delete&id=' + encodeURIComponent(memberId);
+                } else {
                     e.preventDefault();
                 }
             });
         });
+        
+        // Handle gym change - submit hidden form for clean URLs
+        function handleGymChange(gymId) {
+            if (gymId) {
+                // Populate hidden form with current form data
+                document.getElementById('hidden_gym_id').value = gymId;
+                document.getElementById('hidden_mem_id').value = document.getElementById('mem_id').value;
+                document.getElementById('hidden_name').value = document.getElementById('name').value;
+                document.getElementById('hidden_age').value = document.getElementById('age').value;
+                document.getElementById('hidden_dob').value = document.getElementById('dob').value;
+                document.getElementById('hidden_mobileno').value = document.getElementById('mobileno').value;
+                document.getElementById('hidden_trainer_id').value = document.getElementById('trainer_id').value;
+                
+                // Submit hidden form to update payment plans
+                document.getElementById('gymChangeForm').submit();
+            }
+        }
     </script>
 </body>
 </html>

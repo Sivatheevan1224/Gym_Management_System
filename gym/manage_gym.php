@@ -320,7 +320,8 @@ try {
                                             Edit
                                         </button>
                                         <button class="action-btn delete-btn" 
-                                                onclick="if(confirm('Are you sure you want to delete this gym?')) location.href='manage_gym.php?action=delete&id=<?= urlencode($gym['gym_id']) ?>'">
+                                                data-gym-id="<?= htmlspecialchars($gym['gym_id']) ?>"
+                                                data-gym-name="<?= htmlspecialchars($gym['gym_name']) ?>">
                                             Delete
                                         </button>
                                     </td>
@@ -362,8 +363,10 @@ try {
         // Confirm before delete
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
-                if (!confirm('Are you sure you want to delete this gym?')) {
-                    e.preventDefault();
+                const gymId = this.getAttribute('data-gym-id');
+                const gymName = this.getAttribute('data-gym-name');
+                if (confirm('Are you sure you want to delete the gym "' + gymName + '"?')) {
+                    location.href = 'manage_gym.php?action=delete&id=' + encodeURIComponent(gymId);
                 }
             });
         });

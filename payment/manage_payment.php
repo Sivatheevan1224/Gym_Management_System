@@ -309,8 +309,7 @@ try {
                                     <td><?= htmlspecialchars($payment['pay_id']) ?></td>
                                     <td>LKR <?= number_format($payment['amount'], 2) ?></td>
                                     <td>
-                                        <?= htmlspecialchars($payment['gym_id']) ?>
-                                        (<?= htmlspecialchars($payment['gym_name'] ?? 'N/A') ?>)
+                                        <?= htmlspecialchars($payment['gym_name'] ?? 'N/A') ?>
                                     </td>
                                     <td>
                                         <button class="action-btn edit-btn" 
@@ -318,7 +317,8 @@ try {
                                             Edit
                                         </button>
                                         <button class="action-btn delete-btn" 
-                                                onclick="if(confirm('Are you sure you want to delete this payment area and all related trainers/members?')) location.href='manage_payment.php?action=delete&id=<?= urlencode($payment['pay_id']) ?>'">
+                                                data-payment-id="<?= htmlspecialchars($payment['pay_id']) ?>"
+                                                data-payment-amount="<?= htmlspecialchars($payment['amount']) ?>">
                                             Delete
                                         </button>
                                     </td>
@@ -360,7 +360,13 @@ try {
         // Confirm before delete
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
-                if (!confirm('Are you sure you want to delete this payment area and all related trainers/members?')) {
+                const paymentId = this.getAttribute('data-payment-id');
+                const paymentAmount = this.getAttribute('data-payment-amount');
+                
+                if (confirm(`Are you sure you want to delete the payment area with ID ${paymentId} and amount LKR ${paymentAmount}? This will also delete all related trainers and members.`)) {
+                    // Proceed with deletion
+                    location.href = `manage_payment.php?action=delete&id=${encodeURIComponent(paymentId)}`;
+                } else {
                     e.preventDefault();
                 }
             });

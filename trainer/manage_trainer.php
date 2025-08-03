@@ -2,28 +2,27 @@
 require_once('../login/auth.php');
 require_once('../db.php');
 
-// Initialize variables for form processing and data display
 $action = $_GET['action'] ?? '';
 $trainer_id = $_GET['id'] ?? '';
 $errors = [];
 $success = '';
 $trainer_data = [];
 
-// Process form submissions for adding/editing trainers
+// Form submission handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF validation
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die("CSRF validation failed.");
     }
 
-    // Sanitize all input data to prevent SQL injection
+    // Sanitize inputs
     $trainer_id = $conn->real_escape_string(trim($_POST['trainer_id'] ?? ''));
     $name = $conn->real_escape_string(trim($_POST['name'] ?? ''));
     $time = $conn->real_escape_string(trim($_POST['time'] ?? ''));
     $mobileno = $conn->real_escape_string(trim($_POST['mobileno'] ?? ''));
     $pay_id = $conn->real_escape_string(trim($_POST['pay_id'] ?? ''));
     
-    // Validate all required fields with specific rules
+    // Validation
     if (empty($trainer_id)) {
         $errors[] = "Trainer ID is required.";
     }
@@ -44,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Payment plan is required.";
     }
     
-    // Check if trainer ID already exists when adding new trainer
+    // Check for duplicate ID when adding
     if ($_POST['action'] === 'add') {
         $check = $conn->prepare("SELECT trainer_id FROM trainer WHERE trainer_id = ?");
         $check->bind_param("s", $trainer_id);
@@ -57,22 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check->close();
     }
     
-    // Execute database operations if validation passes
+    // Process form if no errors
     if (empty($errors)) {
         try {
             if ($_POST['action'] === 'add') {
-                // Insert new trainer record into database
                 $stmt = $conn->prepare("INSERT INTO trainer (trainer_id, name, time, mobileno, pay_id) VALUES (?, ?, ?, ?, ?)");
                 $stmt->bind_param("sssss", $trainer_id, $name, $time, $mobileno, $pay_id);
                 $stmt->execute();
                 $success = "Trainer added successfully!";
             } 
             elseif ($_POST['action'] === 'edit') {
-                // Update existing trainer record in database
                 $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
-                // Don't update the trainer_id - use original_id for WHERE clause
-                $stmt = $conn->prepare("UPDATE trainer SET name = ?, time = ?, mobileno = ?, pay_id = ? WHERE trainer_id = ?");
-                $stmt->bind_param("sssss", $name, $time, $mobileno, $pay_id, $original_id);
+                $stmt = $conn->prepare("UPDATE trainer SET trainer_id = ?, name = ?, time = ?, mobileno = ?, pay_id = ? WHERE trainer_id = ?");
+                $stmt->bind_param("ssssss", $trainer_id, $name, $time, $mobileno, $pay_id, $original_id);
                 $stmt->execute();
                 $success = "Trainer updated successfully!";
             }
@@ -88,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle trainer deletion with cascading member deletion
+// Handle delete action
 if ($action === 'delete' && !empty($trainer_id)) {
     try {
         // Begin transaction for cascading deletes
@@ -114,7 +110,7 @@ if ($action === 'delete' && !empty($trainer_id)) {
     }
 }
 
-// Fetch trainer data when editing existing trainer
+// Fetch trainer data for editing
 if ($action === 'edit' && !empty($trainer_id)) {
     try {
         $stmt = $conn->prepare("SELECT * FROM trainer WHERE trainer_id = ?");
@@ -133,7 +129,7 @@ if ($action === 'edit' && !empty($trainer_id)) {
     }
 }
 
-// Load payment options for form dropdown
+// Fetch payment options for dropdown
 try {
     $payment_options = $conn->query("SELECT pay_id, amount FROM payment");
 } catch (mysqli_sql_exception $e) {
@@ -141,14 +137,14 @@ try {
     $errors[] = "Error fetching payment options.";
 }
 
-// Setup pagination and search for trainers list
+// Fetch all trainers for listing
 $search = $_GET['search'] ?? '';
 $page = max(1, intval($_GET['page'] ?? 1));
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
 try {
-    // Count total records for pagination calculation
+    // Count total records for pagination
     if (!empty($search)) {
         $search_term = "%$search%";
         $count_stmt = $conn->prepare("SELECT COUNT(*) FROM trainer WHERE trainer_id LIKE ? OR name LIKE ? OR time LIKE ? OR mobileno LIKE ?");
@@ -161,7 +157,7 @@ try {
     $total_records = $count_stmt->get_result()->fetch_row()[0];
     $total_pages = ceil($total_records / $limit);
     
-    // Fetch trainers with payment info for display table
+    // Fetch paginated records with payment info
     if (!empty($search)) {
         $stmt = $conn->prepare("
             SELECT t.*, p.amount 
@@ -197,8 +193,6 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trainer Management - Gym Management System</title>
     <link rel="stylesheet" href="trainer_management.css">
-    <link rel="stylesheet" href="../components/navbar/navbar.css">
-    <link rel="stylesheet" href="../components/sidebar/sidebar.css">
 </head>
 <body>
   <?php include('../components/navbar/navbar.php'); ?>
@@ -247,7 +241,7 @@ try {
                                    value="<?= htmlspecialchars($trainer_data['trainer_id'] ?? '') ?>" 
                                    <?= !empty($trainer_data) ? 'readonly' : '' ?> required>
                             <?php if (!empty($trainer_data)): ?>
-                                <small class="readonly-note">ID cannot be changed after creation</small>
+                                <div class="form-text readonly-note">ID cannot be changed after creation</div>
                             <?php endif; ?>
                         </div>
                         
@@ -261,7 +255,7 @@ try {
                             <label for="time">Available Time</label>
                             <input type="time" id="time" name="time" 
                                    value="<?= htmlspecialchars($trainer_data['time'] ?? '') ?>" required>
-                            <div class="form-text">Select trainer's available time slot</div>
+                            <div class="form-text">Select available training time</div>
                         </div>
                         
                         <div class="form-group">

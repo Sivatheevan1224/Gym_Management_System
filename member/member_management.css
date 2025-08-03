@@ -315,7 +315,7 @@
         }
         
         .login-credentials h5 {
-            color: #059669;
+            color: white;
             margin: 0 0 10px 0;
             font-size: 1rem;
             font-weight: 600;
@@ -323,16 +323,17 @@
         
         .login-credentials p {
             margin: 8px 0;
-            color: #047857;
+            color: white;
             font-family: 'Courier New', monospace;
-            font-weight: 500;
+            font-weight: 600;
         }
         
         .login-credentials small {
-            color: #6b7280;
+            color: white;
             font-style: italic;
             display: block;
             margin-top: 10px;
+            opacity: 0.9;
         }
         
         .readonly-note {
