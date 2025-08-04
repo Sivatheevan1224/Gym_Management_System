@@ -14,7 +14,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-require_once('../db.php');
+require_once('../classes/Database.php');
+
+// Get database connection
+$database = Database::getInstance();
+$conn = $database->getConnection();
 
 // Fetch counts for dashboard
 try {

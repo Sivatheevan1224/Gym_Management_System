@@ -1,6 +1,10 @@
 <?php
 session_start();
-require_once('../db.php');
+require_once('../classes/Database.php');
+
+// Get database connection
+$database = Database::getInstance();
+$conn = $database->getConnection();
 
 // Generate CSRF token if not exists
 if (empty($_SESSION['csrf_token'])) {

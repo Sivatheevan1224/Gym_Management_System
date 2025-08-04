@@ -1,8 +1,23 @@
 <?php
 require_once('../login/auth.php');
-require_once('../db.php');
+require_once('../classes/Database.php');
+require_once('../classes/BaseModel.php');
+require_once('../classes/Payment.php');
+require_once('../classes/Gym.php');
 
-// Initialize variables for form processing and data display
+// Generate CSRF token if not exists
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Get database connection
+$database = Database::getInstance();
+$conn = $database->getConnection();
+
+// Initialize model classes
+$paymentModel = new Payment();
+$gymModel = new Gym();
+
 $action = $_GET['action'] ?? '';
 $pay_id = $_GET['id'] ?? '';
 $errors = [];
@@ -16,66 +31,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die("CSRF validation failed.");
     }
 
-    // Sanitize all input data to prevent SQL injection
-    $pay_id = $conn->real_escape_string(trim($_POST['pay_id'] ?? ''));
-    $amount = $conn->real_escape_string(trim($_POST['amount'] ?? ''));
-    $gym_id = $conn->real_escape_string(trim($_POST['gym_id'] ?? ''));
+    // Sanitize inputs
+    $input_data = [
+        'pay_id' => trim($_POST['pay_id'] ?? ''),
+        'amount' => trim($_POST['amount'] ?? ''),
+        'gym_id' => trim($_POST['gym_id'] ?? '')
+    ];
     
-    // Validate all required fields with specific rules
-    if (empty($pay_id)) {
-        $errors[] = "Payment ID is required.";
-    }
-    
-    if (!is_numeric($amount) || $amount <= 0) {
-        $errors[] = "Amount must be a positive number.";
-    }
-    
-    if (empty($gym_id)) {
-        $errors[] = "Gym is required.";
-    }
+    // Use the Payment class validation method
+    $errors = $paymentModel->validate($input_data);
     
     // Check if payment ID already exists when adding new payment area
     if ($_POST['action'] === 'add') {
-        $check = $conn->prepare("SELECT pay_id FROM payment WHERE pay_id = ?");
-        $check->bind_param("s", $pay_id);
-        $check->execute();
-        $check->store_result();
-        
-        if ($check->num_rows > 0) {
+        if ($paymentModel->findById($input_data['pay_id'])) {
             $errors[] = "Payment ID already exists.";
         }
-        $check->close();
     }
     
     // Execute database operations if validation passes
     if (empty($errors)) {
         try {
             if ($_POST['action'] === 'add') {
-                // Insert new payment area record into database
-                $stmt = $conn->prepare("INSERT INTO payment (pay_id, amount, gym_id) VALUES (?, ?, ?)");
-                $stmt->bind_param("sds", $pay_id, $amount, $gym_id);
-                $stmt->execute();
-                
-                // Store success message in session instead of URL
-                $_SESSION['success_message'] = "Payment area added successfully!";
-                header("Location: manage_payment.php?action=success");
-                exit();
+                $paymentModel->create($input_data);
+                $success = "Payment area added successfully!";
             } 
             elseif ($_POST['action'] === 'edit') {
-                // Update existing payment area record in database
-                $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
-                // Don't update the pay_id - use original_id for WHERE clause
-                $stmt = $conn->prepare("UPDATE payment SET amount = ?, gym_id = ? WHERE pay_id = ?");
-                $stmt->bind_param("dss", $amount, $gym_id, $original_id);
-                $stmt->execute();
-                
-                // Store success message in session instead of URL
-                $_SESSION['success_message'] = "Payment area updated successfully!";
-                header("Location: manage_payment.php?action=success");
-                exit();
+                $original_id = trim($_POST['original_id'] ?? '');
+                $paymentModel->update($original_id, $input_data);
+                $success = "Payment area updated successfully!";
             }
             
-        } catch (mysqli_sql_exception $e) {
+            // Redirect to avoid form resubmission
+            header("Location: manage_payment.php?success=" . urlencode($success));
+            exit();
+            
+        } catch (Exception $e) {
             error_log("Database error: " . $e->getMessage());
             $errors[] = "Database error occurred. Please try again.";
         }
@@ -85,27 +75,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Handle payment area deletion with cascading trainer and member deletion
 if ($action === 'delete' && !empty($pay_id)) {
     try {
-        // Begin transaction for cascading deletes
-        $conn->begin_transaction();
+        if ($paymentModel->delete($pay_id)) {
+            $success = "Payment area and all related data deleted successfully!";
+        } else {
+            $errors[] = "Payment area not found.";
+        }
         
-        // Delete related members first
-        $conn->query("DELETE FROM member WHERE trainer_id IN (SELECT trainer_id FROM trainer WHERE pay_id = '$pay_id')");
-        
-        // Delete related trainers
-        $conn->query("DELETE FROM trainer WHERE pay_id = '$pay_id'");
-        
-        // Delete payment
-        $conn->query("DELETE FROM payment WHERE pay_id = '$pay_id'");
-        
-        $conn->commit();
-        
-        // Store success message in session instead of URL
-        $_SESSION['success_message'] = "Payment area and all related data deleted successfully!";
-        header("Location: manage_payment.php?action=success");
+        // Redirect to avoid refresh issues
+        header("Location: manage_payment.php?success=" . urlencode($success));
         exit();
         
     } catch (Exception $e) {
-        $conn->rollback();
         error_log("Delete error: " . $e->getMessage());
         $errors[] = "Error deleting payment area: " . $e->getMessage();
     }
@@ -114,17 +94,11 @@ if ($action === 'delete' && !empty($pay_id)) {
 // Fetch payment data when editing existing payment area
 if ($action === 'edit' && !empty($pay_id)) {
     try {
-        $stmt = $conn->prepare("SELECT * FROM payment WHERE pay_id = ?");
-        $stmt->bind_param("s", $pay_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 1) {
-            $payment_data = $result->fetch_assoc();
-        } else {
+        $payment_data = $paymentModel->findById($pay_id);
+        if (!$payment_data) {
             $errors[] = "Payment area not found.";
         }
-    } catch (mysqli_sql_exception $e) {
+    } catch (Exception $e) {
         error_log("Database error: " . $e->getMessage());
         $errors[] = "Error fetching payment data.";
     }
@@ -132,8 +106,8 @@ if ($action === 'edit' && !empty($pay_id)) {
 
 // Load gym options for form dropdown
 try {
-    $gym_options = $conn->query("SELECT gym_id, gym_name FROM gym");
-} catch (mysqli_sql_exception $e) {
+    $gym_options = $gymModel->getAll();
+} catch (Exception $e) {
     error_log("Database error: " . $e->getMessage());
     $errors[] = "Error fetching gym options.";
 }
@@ -145,43 +119,22 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 try {
-    // Count total records for pagination calculation
+    // Get payments with search functionality
     if (!empty($search)) {
-        $search_term = "%$search%";
-        $count_stmt = $conn->prepare("SELECT COUNT(*) FROM payment WHERE pay_id LIKE ?");
-        $count_stmt->bind_param("s", $search_term);
+        $payments_list = $paymentModel->search($search);
+        $total_records = count($payments_list);
+        // Apply pagination to search results
+        $payments_list = array_slice($payments_list, $offset, $limit);
     } else {
-        $count_stmt = $conn->prepare("SELECT COUNT(*) FROM payment");
+        $payments_list = $paymentModel->getAllWithDetails();
+        $total_records = count($payments_list);
+        // Apply pagination
+        $payments_list = array_slice($payments_list, $offset, $limit);
     }
     
-    $count_stmt->execute();
-    $total_records = $count_stmt->get_result()->fetch_row()[0];
     $total_pages = ceil($total_records / $limit);
     
-    // Fetch payment areas with gym info for display table
-    if (!empty($search)) {
-        $stmt = $conn->prepare("
-            SELECT p.*, g.gym_name 
-            FROM payment p
-            LEFT JOIN gym g ON p.gym_id = g.gym_id
-            WHERE p.pay_id LIKE ?
-            LIMIT ? OFFSET ?
-        ");
-        $stmt->bind_param("sii", $search_term, $limit, $offset);
-    } else {
-        $stmt = $conn->prepare("
-            SELECT p.*, g.gym_name 
-            FROM payment p
-            LEFT JOIN gym g ON p.gym_id = g.gym_id
-            LIMIT ? OFFSET ?
-        ");
-        $stmt->bind_param("ii", $limit, $offset);
-    }
-    
-    $stmt->execute();
-    $payments = $stmt->get_result();
-    
-} catch (mysqli_sql_exception $e) {
+} catch (Exception $e) {
     error_log("Database error: " . $e->getMessage());
     $errors[] = "Error fetching payments list.";
 }
@@ -221,10 +174,9 @@ try {
                     </div>
                 <?php endif; ?>
                 
-                <?php if (isset($_SESSION['success_message'])): ?>
+                <?php if (isset($_GET['success'])): ?>
                     <div class="alert alert-success">
-                        <?= htmlspecialchars($_SESSION['success_message']) ?>
-                        <?php unset($_SESSION['success_message']); // Clear message after displaying ?>
+                        <?= htmlspecialchars($_GET['success']) ?>
                     </div>
                 <?php endif; ?>
                 
@@ -258,12 +210,12 @@ try {
                             <label for="gym_id">Gym</label>
                             <select id="gym_id" name="gym_id" required>
                                 <option value="">Select Gym</option>
-                                <?php while ($gym = $gym_options->fetch_assoc()): ?>
+                                <?php foreach ($gym_options as $gym): ?>
                                     <option value="<?= htmlspecialchars($gym['gym_id']) ?>" 
                                         <?= (isset($payment_data['gym_id']) && $payment_data['gym_id'] === $gym['gym_id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($gym['gym_id']) ?> - <?= htmlspecialchars($gym['gym_name']) ?>
                                     </option>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -303,8 +255,8 @@ try {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($payments->num_rows > 0): ?>
-                            <?php while ($payment = $payments->fetch_assoc()): ?>
+                        <?php if (!empty($payments_list)): ?>
+                            <?php foreach ($payments_list as $payment): ?>
                                 <tr>
                                     <td><?= htmlspecialchars($payment['pay_id']) ?></td>
                                     <td>LKR <?= number_format($payment['amount'], 2) ?></td>
@@ -323,7 +275,7 @@ try {
                                         </button>
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
                                 <td colspan="4" style="text-align: center;">No payment areas found</td>
@@ -363,7 +315,7 @@ try {
                 const paymentId = this.getAttribute('data-payment-id');
                 const paymentAmount = this.getAttribute('data-payment-amount');
                 
-                if (confirm(`Are you sure you want to delete the payment area with ID ${paymentId} and amount LKR ${paymentAmount}? This will also delete all related trainers and members.`)) {
+                if (confirm(`Are you sure you want to delete the payment area with ID ${paymentId} and amount LKR ${paymentAmount}? This will remove payment references from all related members and trainers, but members will not be deleted.`)) {
                     // Proceed with deletion
                     location.href = `manage_payment.php?action=delete&id=${encodeURIComponent(paymentId)}`;
                 } else {

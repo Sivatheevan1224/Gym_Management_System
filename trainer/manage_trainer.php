@@ -1,6 +1,22 @@
 <?php
 require_once('../login/auth.php');
-require_once('../db.php');
+require_once('../classes/Database.php');
+require_once('../classes/BaseModel.php');
+require_once('../classes/Trainer.php');
+require_once('../classes/Payment.php');
+
+// Generate CSRF token if not exists
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Get database connection
+$database = Database::getInstance();
+$conn = $database->getConnection();
+
+// Initialize model classes
+$trainerModel = new Trainer();
+$paymentModel = new Payment();
 
 $action = $_GET['action'] ?? '';
 $trainer_id = $_GET['id'] ?? '';
@@ -16,60 +32,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Sanitize inputs
-    $trainer_id = $conn->real_escape_string(trim($_POST['trainer_id'] ?? ''));
-    $name = $conn->real_escape_string(trim($_POST['name'] ?? ''));
-    $time = $conn->real_escape_string(trim($_POST['time'] ?? ''));
-    $mobileno = $conn->real_escape_string(trim($_POST['mobileno'] ?? ''));
-    $pay_id = $conn->real_escape_string(trim($_POST['pay_id'] ?? ''));
+    $input_data = [
+        'trainer_id' => trim($_POST['trainer_id'] ?? ''),
+        'name' => trim($_POST['name'] ?? ''),
+        'time' => trim($_POST['time'] ?? ''),
+        'mobileno' => trim($_POST['mobileno'] ?? ''),
+        'pay_id' => trim($_POST['pay_id'] ?? '')
+    ];
     
-    // Validation
-    if (empty($trainer_id)) {
-        $errors[] = "Trainer ID is required.";
-    }
+    // Use the Trainer class validation method
+    $errors = $trainerModel->validate($input_data);
     
-    if (empty($name)) {
-        $errors[] = "Trainer name is required.";
-    }
-    
-    if (empty($time)) {
-        $errors[] = "Time is required.";
-    }
-    
-    if (!preg_match('/^[0-9]{10,15}$/', $mobileno)) {
-        $errors[] = "Invalid mobile number format.";
-    }
-    
-    if (empty($pay_id)) {
+    // Additional validations specific to the form
+    if (empty($input_data['pay_id'])) {
         $errors[] = "Payment plan is required.";
     }
     
     // Check for duplicate ID when adding
     if ($_POST['action'] === 'add') {
-        $check = $conn->prepare("SELECT trainer_id FROM trainer WHERE trainer_id = ?");
-        $check->bind_param("s", $trainer_id);
-        $check->execute();
-        $check->store_result();
-        
-        if ($check->num_rows > 0) {
+        if ($trainerModel->findById($input_data['trainer_id'])) {
             $errors[] = "Trainer ID already exists.";
         }
-        $check->close();
     }
     
     // Process form if no errors
     if (empty($errors)) {
         try {
             if ($_POST['action'] === 'add') {
-                $stmt = $conn->prepare("INSERT INTO trainer (trainer_id, name, time, mobileno, pay_id) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssss", $trainer_id, $name, $time, $mobileno, $pay_id);
-                $stmt->execute();
+                $trainerModel->create($input_data);
                 $success = "Trainer added successfully!";
             } 
             elseif ($_POST['action'] === 'edit') {
-                $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
-                $stmt = $conn->prepare("UPDATE trainer SET trainer_id = ?, name = ?, time = ?, mobileno = ?, pay_id = ? WHERE trainer_id = ?");
-                $stmt->bind_param("ssssss", $trainer_id, $name, $time, $mobileno, $pay_id, $original_id);
-                $stmt->execute();
+                $original_id = trim($_POST['original_id'] ?? '');
+                $trainerModel->update($original_id, $input_data);
                 $success = "Trainer updated successfully!";
             }
             
@@ -77,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: manage_trainer.php?success=" . urlencode($success));
             exit();
             
-        } catch (mysqli_sql_exception $e) {
+        } catch (Exception $e) {
             error_log("Database error: " . $e->getMessage());
             $errors[] = "Database error occurred. Please try again.";
         }
@@ -87,24 +82,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Handle delete action
 if ($action === 'delete' && !empty($trainer_id)) {
     try {
-        // Begin transaction for cascading deletes
-        $conn->begin_transaction();
-        
-        // Delete related members first
-        $conn->query("DELETE FROM member WHERE trainer_id = '$trainer_id'");
-        
-        // Delete trainer
-        $conn->query("DELETE FROM trainer WHERE trainer_id = '$trainer_id'");
-        
-        $conn->commit();
-        $success = "Trainer and all related members deleted successfully!";
+        if ($trainerModel->delete($trainer_id)) {
+            $success = "Trainer deleted successfully!";
+        } else {
+            $errors[] = "Trainer not found.";
+        }
         
         // Redirect to avoid refresh issues
         header("Location: manage_trainer.php?success=" . urlencode($success));
         exit();
         
     } catch (Exception $e) {
-        $conn->rollback();
         error_log("Delete error: " . $e->getMessage());
         $errors[] = "Error deleting trainer: " . $e->getMessage();
     }
@@ -113,17 +101,11 @@ if ($action === 'delete' && !empty($trainer_id)) {
 // Fetch trainer data for editing
 if ($action === 'edit' && !empty($trainer_id)) {
     try {
-        $stmt = $conn->prepare("SELECT * FROM trainer WHERE trainer_id = ?");
-        $stmt->bind_param("s", $trainer_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 1) {
-            $trainer_data = $result->fetch_assoc();
-        } else {
+        $trainer_data = $trainerModel->findById($trainer_id);
+        if (!$trainer_data) {
             $errors[] = "Trainer not found.";
         }
-    } catch (mysqli_sql_exception $e) {
+    } catch (Exception $e) {
         error_log("Database error: " . $e->getMessage());
         $errors[] = "Error fetching trainer data.";
     }
@@ -131,8 +113,8 @@ if ($action === 'edit' && !empty($trainer_id)) {
 
 // Fetch payment options for dropdown
 try {
-    $payment_options = $conn->query("SELECT pay_id, amount FROM payment");
-} catch (mysqli_sql_exception $e) {
+    $payment_options = $paymentModel->getAll();
+} catch (Exception $e) {
     error_log("Database error: " . $e->getMessage());
     $errors[] = "Error fetching payment options.";
 }
@@ -144,43 +126,22 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 try {
-    // Count total records for pagination
+    // Get trainers with search functionality
     if (!empty($search)) {
-        $search_term = "%$search%";
-        $count_stmt = $conn->prepare("SELECT COUNT(*) FROM trainer WHERE trainer_id LIKE ? OR name LIKE ? OR time LIKE ? OR mobileno LIKE ?");
-        $count_stmt->bind_param("ssss", $search_term, $search_term, $search_term, $search_term);
+        $trainers_list = $trainerModel->search($search);
+        $total_records = count($trainers_list);
+        // Apply pagination to search results
+        $trainers_list = array_slice($trainers_list, $offset, $limit);
     } else {
-        $count_stmt = $conn->prepare("SELECT COUNT(*) FROM trainer");
+        $trainers_list = $trainerModel->getAllWithDetails();
+        $total_records = count($trainers_list);
+        // Apply pagination
+        $trainers_list = array_slice($trainers_list, $offset, $limit);
     }
     
-    $count_stmt->execute();
-    $total_records = $count_stmt->get_result()->fetch_row()[0];
     $total_pages = ceil($total_records / $limit);
     
-    // Fetch paginated records with payment info
-    if (!empty($search)) {
-        $stmt = $conn->prepare("
-            SELECT t.*, p.amount 
-            FROM trainer t
-            LEFT JOIN payment p ON t.pay_id = p.pay_id
-            WHERE t.trainer_id LIKE ? OR t.name LIKE ? OR t.time LIKE ? OR t.mobileno LIKE ?
-            LIMIT ? OFFSET ?
-        ");
-        $stmt->bind_param("ssssii", $search_term, $search_term, $search_term, $search_term, $limit, $offset);
-    } else {
-        $stmt = $conn->prepare("
-            SELECT t.*, p.amount 
-            FROM trainer t
-            LEFT JOIN payment p ON t.pay_id = p.pay_id
-            LIMIT ? OFFSET ?
-        ");
-        $stmt->bind_param("ii", $limit, $offset);
-    }
-    
-    $stmt->execute();
-    $trainers = $stmt->get_result();
-    
-} catch (mysqli_sql_exception $e) {
+} catch (Exception $e) {
     error_log("Database error: " . $e->getMessage());
     $errors[] = "Error fetching trainers list.";
 }
@@ -270,12 +231,12 @@ try {
                             <label for="pay_id">Payment Plan</label>
                             <select id="pay_id" name="pay_id" required>
                                 <option value="">Select Payment Plan</option>
-                                <?php while ($payment = $payment_options->fetch_assoc()): ?>
+                                <?php foreach ($payment_options as $payment): ?>
                                     <option value="<?= htmlspecialchars($payment['pay_id']) ?>" 
                                         <?= (isset($trainer_data['pay_id']) && $trainer_data['pay_id'] === $payment['pay_id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($payment['pay_id']) ?> - LKR <?= htmlspecialchars($payment['amount']) ?>
                                     </option>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -317,8 +278,8 @@ try {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($trainers->num_rows > 0): ?>
-                            <?php while ($trainer = $trainers->fetch_assoc()): ?>
+                        <?php if (!empty($trainers_list)): ?>
+                            <?php foreach ($trainers_list as $trainer): ?>
                                 <tr>
                                     <td><?= htmlspecialchars($trainer['trainer_id']) ?></td>
                                     <td><?= htmlspecialchars($trainer['name']) ?></td>
@@ -334,12 +295,12 @@ try {
                                             Edit
                                         </button>
                                         <button class="action-btn delete-btn" 
-                                                onclick="if(confirm('Are you sure you want to delete this trainer and all related members?')) location.href='manage_trainer.php?action=delete&id=<?= urlencode($trainer['trainer_id']) ?>'">
+                                                onclick="if(confirm('Are you sure you want to delete this trainer? This will remove the trainer reference from all assigned members, but members will not be deleted.')) location.href='manage_trainer.php?action=delete&id=<?= urlencode($trainer['trainer_id']) ?>'">
                                             Delete
                                         </button>
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
                                 <td colspan="6" style="text-align: center;">No trainers found</td>

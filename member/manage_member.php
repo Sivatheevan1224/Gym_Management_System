@@ -1,6 +1,30 @@
 <?php
 require_once('../login/auth.php');
-require_once('../db.php');
+require_once('../classes/Database.php');
+require_once('../classes/BaseModel.php');
+require_once('../classes/Member.php');
+require_once('../classes/Payment.php');
+require_once('../classes/Trainer.php');
+require_once('../classes/Gym.php');
+
+// Generate CSRF token if not exists
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Get database connection
+$database = Database::getInstance();
+$conn = $database->getConnection();
+
+// Initialize Member class
+$memberModel = new Member();
+
+// Initialize variables FIRST
+$action = $_GET['action'] ?? '';
+$mem_id = $_GET['id'] ?? '';
+$errors = [];
+$success = '';
+$member_data = [];
 
 // Creates login credentials for new gym members automatically
 function createMemberAccount($mem_id, $name, $age) {
@@ -26,7 +50,7 @@ function createMemberAccount($mem_id, $name, $age) {
     }
 }
 
-// Handle gym selection for filtering payment plans using sessions (clean URLs)
+// Handle gym selection for filtering payment plans using sessions
 if (isset($_POST['gym_change']) && !empty($_POST['selected_gym_id'])) {
     // Store selected gym in session
     $_SESSION['selected_gym_id'] = $_POST['selected_gym_id'];
@@ -53,20 +77,22 @@ if (isset($_POST['gym_change']) && !empty($_POST['selected_gym_id'])) {
     exit();
 }
 
+// Fetch member data when editing existing member (NOW variables are defined)
+if ($action === 'edit' && !empty($mem_id)) {
+    try {
+        $member_data = $memberModel->findById($mem_id);
+        if (!$member_data) {
+            $errors[] = "Member not found.";
+        }
+    } catch (Exception $e) {
+        error_log("Database error: " . $e->getMessage());
+        $errors[] = "Error fetching member data.";
+    }
+}
+
 // Get form data from session or member data
 $selected_gym_id = $_SESSION['selected_gym_id'] ?? ($member_data['gym_id'] ?? '');
 $form_data = $_SESSION['form_data'] ?? [];
-
-// Debug: Check if URL parameters are being received (remove this after testing)
-// error_log("Selected Gym ID: " . $selected_gym_id);
-// error_log("Temp Data: " . print_r($_GET, true));
-
-// Initialize variables for form processing and data display
-$action = $_GET['action'] ?? '';
-$mem_id = $_GET['id'] ?? '';
-$errors = [];
-$success = '';
-$member_data = [];
 
 // Clear temporary session data when starting fresh (not gym filtering or editing)
 if (!isset($_POST['gym_change']) && $action !== 'edit' && $action !== 'success' && !isset($_SESSION['selected_gym_id'])) {
@@ -82,73 +108,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die("CSRF validation failed.");
     }
 
-    // Sanitize all input data to prevent SQL injection
-    $mem_id = $conn->real_escape_string(trim($_POST['mem_id'] ?? ''));
-    $name = $conn->real_escape_string(trim($_POST['name'] ?? ''));
-    $age = $conn->real_escape_string(trim($_POST['age'] ?? ''));
-    $dob = $conn->real_escape_string(trim($_POST['dob'] ?? ''));
-    $mobileno = $conn->real_escape_string(trim($_POST['mobileno'] ?? ''));
-    $pay_id = $conn->real_escape_string(trim($_POST['pay_id'] ?? ''));
-    $trainer_id = $conn->real_escape_string(trim($_POST['trainer_id'] ?? ''));
-    $gym_id = $conn->real_escape_string(trim($_POST['gym_id'] ?? ''));
+    // Sanitize all input data
+    $input_data = [
+        'mem_id' => trim($_POST['mem_id'] ?? ''),
+        'name' => trim($_POST['name'] ?? ''),
+        'age' => trim($_POST['age'] ?? ''),
+        'dob' => trim($_POST['dob'] ?? ''),
+        'mobileno' => trim($_POST['mobileno'] ?? ''),
+        'pay_id' => trim($_POST['pay_id'] ?? ''),
+        'trainer_id' => trim($_POST['trainer_id'] ?? ''),
+        'gym_id' => trim($_POST['gym_id'] ?? '')
+    ];
     
-    // Validate all required fields with specific rules
-    if (empty($mem_id)) {
-        $errors[] = "Member ID is required.";
-    }
+    // Use the Member class validation method
+    $errors = $memberModel->validate($input_data);
     
-    if (empty($name)) {
-        $errors[] = "Member name is required.";
-    }
-    
-    if (!is_numeric($age) || $age < 12 || $age > 100) {
-        $errors[] = "Age must be between 12 and 100.";
-    }
-    
-    if (empty($dob)) {
-        $errors[] = "Date of birth is required.";
-    }
-    
-    if (!preg_match('/^[0-9]{10,15}$/', $mobileno)) {
-        $errors[] = "Invalid mobile number format.";
-    }
-    
-    if (empty($pay_id)) {
+    // Additional validations specific to the form
+    if (empty($input_data['pay_id'])) {
         $errors[] = "Payment plan is required.";
     }
     
-    if (empty($trainer_id)) {
+    if (empty($input_data['trainer_id'])) {
         $errors[] = "Trainer is required.";
     }
     
-    if (empty($gym_id)) {
+    if (empty($input_data['gym_id'])) {
         $errors[] = "Gym is required.";
     }
     
     // Check if member ID already exists when adding new member
     if ($_POST['action'] === 'add') {
-        $check = $conn->prepare("SELECT mem_id FROM member WHERE mem_id = ?");
-        $check->bind_param("s", $mem_id);
-        $check->execute();
-        $check->store_result();
-        
-        if ($check->num_rows > 0) {
+        if ($memberModel->findById($input_data['mem_id'])) {
             $errors[] = "Member ID already exists.";
         }
-        $check->close();
     }
     
     // Execute database operations if validation passes
     if (empty($errors)) {
         try {
             if ($_POST['action'] === 'add') {
-                // Insert new member record into database
-                $stmt = $conn->prepare("INSERT INTO member (mem_id, name, age, dob, mobileno, pay_id, trainer_id, gym_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssisssss", $mem_id, $name, $age, $dob, $mobileno, $pay_id, $trainer_id, $gym_id);
-                $stmt->execute();
+                // Create new member using OOP method
+                $memberModel->create($input_data);
                 
                 // Create member login account
-                list($username, $password) = createMemberAccount($mem_id, $name, $age);
+                list($username, $password) = createMemberAccount($input_data['mem_id'], $input_data['name'], $input_data['age']);
                 
                 // Store success message and credentials in session instead of URL
                 $_SESSION['success_message'] = "Member added successfully!";
@@ -167,24 +170,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             } 
             elseif ($_POST['action'] === 'edit') {
-                // Update existing member record in database
-                $original_id = $conn->real_escape_string(trim($_POST['original_id'] ?? ''));
-                // Don't update the mem_id - use original_id for WHERE clause
-                $stmt = $conn->prepare("UPDATE member SET name = ?, age = ?, dob = ?, mobileno = ?, pay_id = ?, trainer_id = ?, gym_id = ? WHERE mem_id = ?");
-                $stmt->bind_param("sissssss", $name, $age, $dob, $mobileno, $pay_id, $trainer_id, $gym_id, $original_id);
-                $stmt->execute();
+                // Update existing member using OOP method
+                $original_id = trim($_POST['original_id'] ?? '');
+                $memberModel->update($original_id, $input_data);
                 
                 // Clear temporary form data from session after successful edit
                 unset($_SESSION['selected_gym_id'], $_SESSION['form_data']);
                 
-                $success = "Member updated successfully!";
+                // Store success message in session for consistency
+                $_SESSION['success_message'] = "Member updated successfully!";
+                header("Location: manage_member.php?action=success");
+                exit();
             }
             
-            // Redirect to avoid form resubmission
-            header("Location: manage_member.php?success=" . urlencode($success));
-            exit();
-            
-        } catch (mysqli_sql_exception $e) {
+        } catch (Exception $e) {
             error_log("Database error: " . $e->getMessage());
             $errors[] = "Database error occurred. Please try again.";
         }
@@ -194,83 +193,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Handle member deletion with transaction safety
 if ($action === 'delete' && !empty($mem_id)) {
     try {
-        // Start transaction
-        $conn->begin_transaction();
-        
-        // First delete from login table
-        $stmt = $conn->prepare("DELETE FROM login WHERE member_id = ?");
-        $stmt->bind_param("s", $mem_id);
-        $stmt->execute();
-        
-        // Then delete from member table
-        $stmt = $conn->prepare("DELETE FROM member WHERE mem_id = ?");
-        $stmt->bind_param("s", $mem_id);
-        $stmt->execute();
-        
-        if ($stmt->affected_rows > 0) {
-            // Commit transaction
-            $conn->commit();
-            $success = "Member deleted successfully!";
+        if ($memberModel->delete($mem_id)) {
+            $_SESSION['success_message'] = "Member deleted successfully!";
+            header("Location: manage_member.php?action=success");
         } else {
-            // Rollback if member not found
-            $conn->rollback();
             $errors[] = "Member not found.";
         }
-        
-        // Redirect to avoid refresh issues
-        header("Location: manage_member.php?success=" . urlencode($success));
         exit();
         
     } catch (Exception $e) {
-        // Rollback on error
-        $conn->rollback();
         error_log("Delete error: " . $e->getMessage());
         $errors[] = "Error deleting member: " . $e->getMessage();
     }
 }
 
-// Fetch member data when editing existing member
-if ($action === 'edit' && !empty($mem_id)) {
-    try {
-        $stmt = $conn->prepare("SELECT * FROM member WHERE mem_id = ?");
-        $stmt->bind_param("s", $mem_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 1) {
-            $member_data = $result->fetch_assoc();
-        } else {
-            $errors[] = "Member not found.";
-        }
-    } catch (mysqli_sql_exception $e) {
-        error_log("Database error: " . $e->getMessage());
-        $errors[] = "Error fetching member data.";
-    }
-}
-
 // Load dropdown options for form selects (payments, trainers, gyms)
 try {
-    // If gym is selected via session, filter payment plans by gym using JOIN
+    // Initialize other models for dropdown data
+    $paymentModel = new Payment();
+    $trainerModel = new Trainer();
+    $gymModel = new Gym();
+    
+    // If gym is selected via session or from member data, filter payment plans by gym
     if (!empty($selected_gym_id)) {
-        $payment_query = "
-            SELECT p.pay_id, p.amount, g.gym_name 
-            FROM payment p 
-            INNER JOIN gym g ON p.gym_id = g.gym_id 
-            WHERE p.gym_id = ?
-        ";
-        $payment_options = $conn->prepare($payment_query);
-        $payment_options->bind_param("s", $selected_gym_id);
-        $payment_options->execute();
-        $payment_options = $payment_options->get_result();
-        
+        $payment_options = $paymentModel->getByGym($selected_gym_id);
     } else {
         // If no gym selected, show empty payment options
-        $payment_options = $conn->query("SELECT pay_id, amount FROM payment WHERE 1=0");
+        $payment_options = [];
     }
     
-    $trainer_options = $conn->query("SELECT trainer_id, name FROM trainer");
-    $gym_options = $conn->query("SELECT gym_id, gym_name FROM gym");
-} catch (mysqli_sql_exception $e) {
+    $trainer_options = $trainerModel->getAll();
+    $gym_options = $gymModel->getAll();
+} catch (Exception $e) {
     error_log("Database error: " . $e->getMessage());
     $errors[] = "Error fetching dropdown options.";
 }
@@ -282,51 +236,12 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 try {
-    // Count total records for pagination calculation
-    if (!empty($search)) {
-        $search_term = "%$search%";
-        $count_stmt = $conn->prepare("SELECT COUNT(*) FROM member WHERE mem_id LIKE ? OR name LIKE ?");
-        $count_stmt->bind_param("ss", $search_term, $search_term);
-    } else {
-        $count_stmt = $conn->prepare("SELECT COUNT(*) FROM member");
-    }
-    
-    $count_stmt->execute();
-    $total_records = $count_stmt->get_result()->fetch_row()[0];
+    // Get members with pagination and search using OOP method
+    $members_data = $memberModel->getAllWithDetails($search, $limit, $offset);
+    $members = $members_data['members'];
+    $total_records = $members_data['total'];
     $total_pages = ceil($total_records / $limit);
-    
-    // Fetch members with related data for display table
-    if (!empty($search)) {
-        $stmt = $conn->prepare("
-            SELECT m.*, p.amount, t.name AS trainer_name, g.gym_name 
-            FROM member m
-            LEFT JOIN payment p ON m.pay_id = p.pay_id
-            LEFT JOIN trainer t ON m.trainer_id = t.trainer_id
-            LEFT JOIN gym g ON m.gym_id = g.gym_id
-            WHERE m.mem_id LIKE ? OR m.name LIKE ?
-            LIMIT ? OFFSET ?
-        ");
-    } else {
-        $stmt = $conn->prepare("
-            SELECT m.*, p.amount, t.name AS trainer_name, g.gym_name 
-            FROM member m
-            LEFT JOIN payment p ON m.pay_id = p.pay_id
-            LEFT JOIN trainer t ON m.trainer_id = t.trainer_id
-            LEFT JOIN gym g ON m.gym_id = g.gym_id
-            LIMIT ? OFFSET ?
-        ");
-    }
-    
-    // Bind parameters for pagination
-    if (!empty($search)) {
-        $stmt->bind_param("ssii", $search_term, $search_term, $limit, $offset);
-    } else {
-        $stmt->bind_param("ii", $limit, $offset);
-    }
-    
-    $stmt->execute();
-    $members = $stmt->get_result();
-} catch (mysqli_sql_exception $e) {
+} catch (Exception $e) {
     error_log("Database error: " . $e->getMessage());
     $errors[] = "Error fetching members list.";
 }
@@ -441,13 +356,13 @@ try {
                             <label for="gym_id">Gym</label>
                             <select id="gym_id" name="gym_id" required onchange="handleGymChange(this.value)">
                                 <option value="">Select Gym</option>
-                                <?php while ($gym = $gym_options->fetch_assoc()): ?>
+                                <?php foreach ($gym_options as $gym): ?>
                                     <option value="<?= htmlspecialchars($gym['gym_id']) ?>" 
                                         <?= (isset($member_data['gym_id']) && $member_data['gym_id'] === $gym['gym_id']) ? 'selected' : '' ?>
                                         <?= (isset($selected_gym_id) && $selected_gym_id === $gym['gym_id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($gym['gym_id']) ?> - <?= htmlspecialchars($gym['gym_name']) ?>
                                     </option>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         
@@ -458,12 +373,12 @@ try {
                                     <option value="">Select Gym First</option>
                                 <?php else: ?>
                                     <option value="">Select Payment Plan</option>
-                                    <?php while ($payment = $payment_options->fetch_assoc()): ?>
+                                    <?php foreach ($payment_options as $payment): ?>
                                         <option value="<?= htmlspecialchars($payment['pay_id']) ?>" 
                                             <?= (isset($member_data['pay_id']) && $member_data['pay_id'] === $payment['pay_id']) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($payment['pay_id']) ?> - LKR <?= htmlspecialchars($payment['amount']) ?>
                                         </option>
-                                    <?php endwhile; ?>
+                                    <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
                         </div>
@@ -472,13 +387,13 @@ try {
                             <label for="trainer_id">Trainer</label>
                             <select id="trainer_id" name="trainer_id" required>
                                 <option value="">Select Trainer</option>
-                                <?php while ($trainer = $trainer_options->fetch_assoc()): ?>
+                                <?php foreach ($trainer_options as $trainer): ?>
                                     <option value="<?= htmlspecialchars($trainer['trainer_id']) ?>" 
                                         <?= (isset($member_data['trainer_id']) && $member_data['trainer_id'] === $trainer['trainer_id']) ? 'selected' : '' ?>
                                         <?= (isset($form_data['trainer_id']) && $form_data['trainer_id'] === $trainer['trainer_id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($trainer['trainer_id']) ?> - <?= htmlspecialchars($trainer['name']) ?>
                                     </option>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -538,8 +453,8 @@ try {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($members->num_rows > 0): ?>
-                            <?php while ($member = $members->fetch_assoc()): ?>
+                        <?php if (!empty($members)): ?>
+                            <?php foreach ($members as $member): ?>
                                 <tr>
                                     <td><?= htmlspecialchars($member['mem_id']) ?></td>
                                     <td><?= htmlspecialchars($member['name']) ?></td>
@@ -567,7 +482,7 @@ try {
                                         </button>
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
                                 <td colspan="9" style="text-align: center;">No members found</td>
@@ -576,6 +491,7 @@ try {
                     </tbody>
                 </table>
                 
+                <!-- Pagination -->
                 <?php if ($total_pages > 1): ?>
                     <div style="margin-top: 20px; display: flex; justify-content: center; gap: 5px;">
                         <?php if ($page > 1): ?>
@@ -600,40 +516,11 @@ try {
         </div>
     </div>
 
+    <!-- JavaScript for gym change functionality -->
     <script>
-        // Calculate age from DOB
-        document.getElementById('dob').addEventListener('change', function() {
-            const dob = new Date(this.value);
-            const today = new Date();
-            let age = today.getFullYear() - dob.getFullYear();
-            const monthDiff = today.getMonth() - dob.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                age--;
-            }
-            
-            document.getElementById('age').value = age;
-        });
-        
-        // Confirm before delete
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                const memberId = this.getAttribute('data-member-id');
-                const memberName = this.getAttribute('data-member-name');
-                
-                if (confirm('Are you sure you want to delete member ID ' + memberId + ' - ' + memberName + '?')) {
-                    // Redirect to delete URL
-                    location.href = 'manage_member.php?action=delete&id=' + encodeURIComponent(memberId);
-                } else {
-                    e.preventDefault();
-                }
-            });
-        });
-        
-        // Handle gym change - submit hidden form for clean URLs
         function handleGymChange(gymId) {
             if (gymId) {
-                // Populate hidden form with current form data
+                // Capture current form values
                 document.getElementById('hidden_gym_id').value = gymId;
                 document.getElementById('hidden_mem_id').value = document.getElementById('mem_id').value;
                 document.getElementById('hidden_name').value = document.getElementById('name').value;
@@ -642,10 +529,25 @@ try {
                 document.getElementById('hidden_mobileno').value = document.getElementById('mobileno').value;
                 document.getElementById('hidden_trainer_id').value = document.getElementById('trainer_id').value;
                 
-                // Submit hidden form to update payment plans
+                // Submit the hidden form
                 document.getElementById('gymChangeForm').submit();
             }
         }
+
+        // Delete confirmation
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const memberId = this.getAttribute('data-member-id');
+                    const memberName = this.getAttribute('data-member-name');
+                    
+                    if (confirm(`Are you sure you want to delete member "${memberName}" (ID: ${memberId})? This action cannot be undone.`)) {
+                        window.location.href = `manage_member.php?action=delete&id=${encodeURIComponent(memberId)}`;
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

@@ -243,6 +243,12 @@ ALTER TABLE `payment`
 --
 ALTER TABLE `trainer`
   ADD CONSTRAINT `trainer_ibfk_1` FOREIGN KEY (`pay_id`) REFERENCES `payment` (`pay_id`);
+
+
+-- This will allow gym_id to be NULL for members
+SET FOREIGN_KEY_CHECKS = 0;
+ALTER TABLE `member` MODIFY COLUMN `gym_id` varchar(20) DEFAULT NULL;
+SET FOREIGN_KEY_CHECKS = 1; 
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
