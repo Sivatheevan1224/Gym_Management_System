@@ -150,8 +150,8 @@ class Member extends BaseModel {
             $errors[] = "Name is required";
         }
         
-        if (empty($data['age']) || $data['age'] < 1 || $data['age'] > 120) {
-            $errors[] = "Valid age is required (1-120)";
+        if (empty($data['age']) || $data['age'] < 10 || $data['age'] > 80) {
+            $errors[] = "Valid age is required (10-80)";
         }
         
         if (empty($data['mobileno']) || !preg_match('/^\d{10}$/', $data['mobileno'])) {

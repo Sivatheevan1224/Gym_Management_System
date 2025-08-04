@@ -36,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = "Name is required.";
         }
         
-        if (!is_numeric($age) || $age < 12 || $age > 100) {
-            $errors[] = "Age must be between 12 and 100.";
+        if (!is_numeric($age) || $age < 10 || $age > 80) {
+            $errors[] = "Age must be between 10 and 80.";
         }
         
         if (empty($dob)) {
