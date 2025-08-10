@@ -79,22 +79,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle delete action
+// Handle delete action - OPTIMIZED
 if ($action === 'delete' && !empty($trainer_id)) {
+    // Add timing for performance monitoring
+    $start_time = microtime(true);
+    
     try {
-        if ($trainerModel->delete($trainer_id)) {
-            $success = "Trainer deleted successfully!";
+        // Validate trainer ID before attempting deletion
+        if (!preg_match('/^[A-Za-z0-9_-]+$/', $trainer_id)) {
+            $errors[] = "Invalid trainer ID format.";
         } else {
-            $errors[] = "Trainer not found.";
+            $delete_result = $trainerModel->delete($trainer_id);
+            
+            if ($delete_result) {
+                $end_time = microtime(true);
+                $execution_time = round(($end_time - $start_time) * 1000, 2); // Convert to milliseconds
+                
+                $success = "Trainer deleted successfully!";
+                
+                // Log successful deletion for performance tracking
+                error_log("Trainer deletion successful - ID: $trainer_id, Time: {$execution_time}ms");
+            } else {
+                $errors[] = "Trainer not found or could not be deleted.";
+            }
         }
         
         // Redirect to avoid refresh issues
-        header("Location: manage_trainer.php?success=" . urlencode($success));
+        if (!empty($success)) {
+            header("Location: manage_trainer.php?success=" . urlencode($success));
+        } else {
+            header("Location: manage_trainer.php?error=" . urlencode(implode(', ', $errors)));
+        }
         exit();
         
     } catch (Exception $e) {
-        error_log("Delete error: " . $e->getMessage());
+        $end_time = microtime(true);
+        $execution_time = round(($end_time - $start_time) * 1000, 2);
+        
+        error_log("Trainer deletion error - ID: $trainer_id, Time: {$execution_time}ms, Error: " . $e->getMessage());
         $errors[] = "Error deleting trainer: " . $e->getMessage();
+        
+        header("Location: manage_trainer.php?error=" . urlencode(implode(', ', $errors)));
+        exit();
     }
 }
 
@@ -152,8 +178,9 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trainer Management - Gym Management System</title>
+    <title>Manage Trainers</title>
     <link rel="stylesheet" href="trainer_management.css">
+    <link rel="icon" type="image/png" href="../images/logo.png">
 </head>
 <body>
   <?php include('../components/navbar/navbar.php'); ?>
@@ -295,7 +322,8 @@ try {
                                             Edit
                                         </button>
                                         <button class="action-btn delete-btn" 
-                                                onclick="if(confirm('Are you sure you want to delete this trainer? This will remove the trainer reference from all assigned members, but members will not be deleted.')) location.href='manage_trainer.php?action=delete&id=<?= urlencode($trainer['trainer_id']) ?>'">
+                                                data-trainer-id="<?= htmlspecialchars($trainer['trainer_id']) ?>"
+                                                data-trainer-name="<?= htmlspecialchars($trainer['name']) ?>">
                                             Delete
                                         </button>
                                     </td>
@@ -334,12 +362,38 @@ try {
     </div>
 
     <script>
-        // Confirm before delete
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                if (!confirm('Are you sure you want to delete this trainer and all related members?')) {
+        // Optimized trainer deletion with loading feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
                     e.preventDefault();
-                }
+                    
+                    const trainerId = this.getAttribute('data-trainer-id');
+                    const trainerName = this.getAttribute('data-trainer-name');
+                    
+                    // Updated confirmation message
+                    const confirmMessage = `Are you sure you want to delete trainer "${trainerName}" (ID: ${trainerId})?\n\nThis will remove the trainer reference from assigned members, but members will not be deleted.`;
+                    
+                    if (confirm(confirmMessage)) {
+                        // Show loading state
+                        this.disabled = true;
+                        this.textContent = 'Deleting...';
+                        this.style.opacity = '0.6';
+                        
+                        // Add loading indicator to the page
+                        const loadingDiv = document.createElement('div');
+                        loadingDiv.innerHTML = '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 5px; z-index: 9999;">⏳ Deleting trainer...</div>';
+                        document.body.appendChild(loadingDiv);
+                        
+                        // Start timer for performance monitoring
+                        const startTime = Date.now();
+                        
+                        // Redirect to deletion URL
+                        window.location.href = `manage_trainer.php?action=delete&id=${encodeURIComponent(trainerId)}`;
+                    }
+                });
             });
         });
     </script>

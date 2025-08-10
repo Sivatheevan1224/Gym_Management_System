@@ -151,6 +151,7 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="gym_management.css">
+    <link rel="icon" type="image/png" href="../images/logo.png">
 </head>
 <body>
   <?php include('../components/navbar/navbar.php'); ?>

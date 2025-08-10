@@ -158,6 +158,7 @@ $member = $stmt->get_result()->fetch_assoc();
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="../components/navbar/navbar.css">
     <link rel="stylesheet" href="../components/sidebar/sidebar.css">
+    <link rel="icon" type="image/png" href="../images/logo.png">
 </head>
 <body>
     <?php include('../components/navbar/navbar.php'); ?>

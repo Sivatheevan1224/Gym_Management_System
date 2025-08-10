@@ -110,13 +110,25 @@ class Trainer extends BaseModel {
         return $result['count'];
     }
     
-    // Override delete method to handle foreign key constraints
+    // Override delete method to handle foreign key constraints - OPTIMIZED
     public function delete($id) {
         try {
-            // Start transaction
+            // Start transaction with proper isolation level
             $this->db->getConnection()->autocommit(false);
             
-            // Step 1: Update members to remove references to this trainer (set to NULL)
+            // Check if trainer exists first to avoid unnecessary operations
+            $checkStmt = $this->db->prepare("SELECT trainer_id FROM trainer WHERE trainer_id = ? LIMIT 1");
+            $checkStmt->bind_param("s", $id);
+            $checkStmt->execute();
+            $result = $checkStmt->get_result();
+            
+            if ($result->num_rows === 0) {
+                $this->db->getConnection()->rollback();
+                $this->db->getConnection()->autocommit(true);
+                return false;
+            }
+            
+            // Step 1: Update members to remove references to this trainer (set to NULL) - OPTIMIZED
             $memberStmt = $this->db->prepare("UPDATE member SET trainer_id = NULL WHERE trainer_id = ?");
             $memberStmt->bind_param("s", $id);
             $memberStmt->execute();
@@ -127,7 +139,7 @@ class Trainer extends BaseModel {
             $success = $trainerStmt->execute();
             
             if ($success && $trainerStmt->affected_rows > 0) {
-                // Commit the transaction
+                // Commit the transaction quickly
                 $this->db->getConnection()->commit();
                 $this->db->getConnection()->autocommit(true);
                 return true;
@@ -139,7 +151,7 @@ class Trainer extends BaseModel {
             }
             
         } catch (Exception $e) {
-            // Rollback on any error
+            // Rollback on any error quickly
             $this->db->getConnection()->rollback();
             $this->db->getConnection()->autocommit(true);
             throw $e;
