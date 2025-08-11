@@ -160,6 +160,53 @@ class Member extends BaseModel {
         
         if (empty($data['dob'])) {
             $errors[] = "Date of birth is required";
+        } else {
+            // Validate date of birth format and constraints
+            $dob = $data['dob'];
+            $age = isset($data['age']) ? (int)$data['age'] : 0;
+            
+            // Check if date format is valid (YYYY-MM-DD)
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
+                $errors[] = "Date of birth must be in YYYY-MM-DD format";
+            } else {
+                $dobDate = new DateTime($dob);
+                $today = new DateTime();
+                $minDate = new DateTime();
+                $maxDate = new DateTime();
+                
+                // Set date limits (10-80 years old)
+                $minDate->modify('-80 years');
+                $maxDate->modify('-10 years');
+                
+                // Check if date is not in the future
+                if ($dobDate > $today) {
+                    $errors[] = "Date of birth cannot be in the future";
+                }
+                
+                // Check if date is within valid age range
+                if ($dobDate < $minDate) {
+                    $errors[] = "Date of birth indicates age over 80 years";
+                }
+                
+                if ($dobDate > $maxDate) {
+                    $errors[] = "Date of birth indicates age under 10 years";
+                }
+                
+                // If age is provided, check if DOB matches the age (within 1 year tolerance)
+                if ($age > 0) {
+                    $calculatedAge = $today->diff($dobDate)->y;
+                    if (abs($calculatedAge - $age) > 1) {
+                        $errors[] = "Date of birth does not match the provided age. Calculated age: $calculatedAge";
+                    }
+                }
+                
+                // Additional check: DOB should not be older than 120 years (extreme case)
+                $extremeMinDate = new DateTime();
+                $extremeMinDate->modify('-120 years');
+                if ($dobDate < $extremeMinDate) {
+                    $errors[] = "Invalid date of birth - too old";
+                }
+            }
         }
         
         return $errors;

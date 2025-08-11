@@ -32,7 +32,16 @@ function createMemberAccount($mem_id, $name, $age) {
     
     // Generate username and password
     $username = strtolower(str_replace(' ', '', $name)); // Just the name without spaces
-    $password = strtolower(str_replace(' ', '', $name)) . $age; // name+age as password
+    $password = strtolower(str_replace(' ', '', $name)) . $age; 
+
+    // function generateRandomPassword($len = 12) {
+    //     $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+';
+    //     $max = strlen($chars) - 1;
+    //     $pw = '';
+    //     for ($i=0; $i<$len; $i++) $pw .= $chars[random_int(0,$max)];
+    //     return $pw;
+    //   }
+    //$password = generateRandomPassword(12); // Generate a random password
     
     // Hash the password using PHP's password_hash function
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -337,20 +346,24 @@ try {
                             <label for="age">Age</label>
                             <input type="number" id="age" name="age" 
                                    value="<?= htmlspecialchars($member_data['age'] ?? $form_data['age'] ?? '') ?>" 
-                                   min="12" max="100" required>
+                                   min="10" max="80" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="dob">Date of Birth</label>
                             <input type="date" id="dob" name="dob" 
-                                   value="<?= htmlspecialchars($member_data['dob'] ?? $form_data['dob'] ?? '') ?>" required>
+                                   value="<?= htmlspecialchars($member_data['dob'] ?? $form_data['dob'] ?? '') ?>" 
+                                   max="<?= date('Y-m-d', strtotime('-10 years')) ?>" 
+                                   min="<?= date('Y-m-d', strtotime('-80 years')) ?>" 
+                                   required>
+                            <div class="form-text">Select date of birth (age 10-80 years)</div>
                         </div>
                         
                         <div class="form-group">
                             <label for="mobileno">Mobile Number</label>
                             <input type="tel" id="mobileno" name="mobileno" 
                                    value="<?= htmlspecialchars($member_data['mobileno'] ?? $form_data['mobileno'] ?? '') ?>" 
-                                   pattern="[0-9]{10,15}" required>
+                                   pattern="[0-9]{10,11}" required>
                             <div class="form-text">Enter 10 digits Sri Lankan number</div>
                         </div>
                         
@@ -410,7 +423,7 @@ try {
                     </div>
                 </form>
                 
-                <!-- Hidden form for gym change functionality (moved outside main form) -->
+                <!-- Hidden form for gym change functionality -->
                 <form id="gymChangeForm" method="post" action="manage_member.php" style="display: none;">
                     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                     <input type="hidden" name="gym_change" value="1">
