@@ -12,8 +12,6 @@ GitHub
 
 🔍 Key features & modules (inferred)
 
-From the folder names and file names, we can infer what the system can do:
-
 User authentication: Presence of login, logout pages → implies users must log in and log out.
 
 Member management: The member page/folder suggests a section for managing gym members (add/edit/delete/search).
@@ -50,15 +48,6 @@ Presence of database schema (gym.sql) means it’s almost ready to be set up and
 
 It addresses a real-world domain (gym management) — so it has practical applicability rather than being purely toy/demonstration.
 
-⚠️ Considerations / Areas for improvement
-
-As with many PHP projects, security considerations (SQL injection, authentication, input sanitisation) will need verification — if you use it, you should review and harden it.
-
-UI and UX: While there are UI components, there’s no guarantee how polished the interface is — you might want to update styling/responsiveness.
-
-Scalability & features: The system may cover basic features but gyms with more complex needs (class scheduling, check-in kiosks, mobile app) may need extensions.
-
-Documentation: More documentation (setup steps, configuration, dependencies) would improve usability.
 
 🛠 How to get started (based on what’s available)
 
@@ -67,7 +56,6 @@ Here’s how you might set it up:
 Clone the repository:
 
 git clone https://github.com/Sivatheevan1224/Gym_Management_System.git
-
 
 Set up a web server environment (e.g., Apache with PHP + MySQL) or use something like XAMPP/WAMP.
 
@@ -80,3 +68,4 @@ Place the project folder in your web server’s root (or configure virtual host)
 Access via browser, go to login page, and explore functions (members, trainers, payments).
 
 Modify as needed: update UI, add roles, adjust modules etc.
+
